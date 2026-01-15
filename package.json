@@ -9,7 +9,7 @@
     "start": "npx prisma migrate deploy && next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "cron:cleanup-pledges": "node --loader tsx src/cron/cleanupPledges.ts"
+    "cron:cleanup-pledges": "node scripts/cron-cleanup-pledges.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
