@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:clean": "lsof -ti :3001 | xargs kill -9 || true; rm -rf .next; PORT=3001 npm run dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npx prisma migrate deploy && next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "cron:cleanup-pledges": "node --loader tsx src/cron/cleanupPledges.ts"
