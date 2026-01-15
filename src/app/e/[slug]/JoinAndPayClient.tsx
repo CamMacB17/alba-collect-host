@@ -23,7 +23,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
     try {
       const result = await payAndJoin({ slug, name, email });
 
-      if (result.error) {
+      if ("error" in result) {
         // Normalise error messages
         let errorText = result.error;
         if (result.error.includes("already marked as paid")) {

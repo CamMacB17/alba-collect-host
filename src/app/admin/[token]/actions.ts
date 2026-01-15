@@ -160,6 +160,22 @@ export async function updateMaxSpots(
     throw new Error("Admin token is required");
   }
 
+  // Validate maxSpots is a number
+  if (maxSpots === null || maxSpots === undefined || isNaN(maxSpots)) {
+    throw new Error("Max spots must be a number");
+  }
+
+  // Ensure maxSpots is a number type
+  const maxSpotsNumber = Number(maxSpots);
+  if (isNaN(maxSpotsNumber)) {
+    throw new Error("Max spots must be a number");
+  }
+
+  // maxSpots must be >= 1
+  if (maxSpotsNumber < 1) {
+    throw new Error("Max spots must be at least 1");
+  }
+
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
     where: { token: trimmedToken },
@@ -183,33 +199,25 @@ export async function updateMaxSpots(
     throw new Error("Event not found");
   }
 
-  // If maxSpots is not null, validate it
-  if (maxSpots !== null) {
-    // maxSpots must be >= 1
-    if (maxSpots < 1) {
-      throw new Error("Max spots must be at least 1");
-    }
-
-    // Count current active payments for the event
-    const activeCount = await prisma.payment.count({
-      where: {
-        eventId: event.id,
-        status: {
-          in: ["PLEDGED", "PAID"],
-        },
+  // Count current active payments for the event
+  const activeCount = await prisma.payment.count({
+    where: {
+      eventId: event.id,
+      status: {
+        in: ["PLEDGED", "PAID"],
       },
-    });
+    },
+  });
 
-    // If maxSpots < activeCount, throw error
-    if (maxSpots < activeCount) {
-      throw new Error("Cannot set max spots below current number of participants");
-    }
+  // If maxSpots < activeCount, throw error
+  if (maxSpotsNumber < activeCount) {
+    throw new Error("Cannot set max spots below current number of participants");
   }
 
-  // Update Event.maxSpots
+  // Update Event.maxSpots (always a number now)
   await prisma.event.update({
     where: { id: trimmedEventId },
-    data: { maxSpots },
+    data: { maxSpots: maxSpotsNumber },
   });
 }
 
@@ -217,7 +225,7 @@ export async function updateEventPrice(
   eventId: string,
   pricePence: number | null,
   adminToken: string
-): Promise<void> {
+): Promise<{ error: string } | void> {
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -230,6 +238,22 @@ export async function updateEventPrice(
     throw new Error("Admin token is required");
   }
 
+  // Validate pricePence is a number
+  if (pricePence === null || pricePence === undefined || isNaN(pricePence)) {
+    return { error: "Price must be a number" };
+  }
+
+  // Ensure pricePence is a number type
+  const pricePenceNumber = Number(pricePence);
+  if (isNaN(pricePenceNumber)) {
+    return { error: "Price must be a number" };
+  }
+
+  // pricePence must be >= 0
+  if (pricePenceNumber < 0) {
+    return { error: "Price must be 0 or more" };
+  }
+
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
     where: { token: trimmedToken },
@@ -253,18 +277,10 @@ export async function updateEventPrice(
     throw new Error("Event not found");
   }
 
-  // If pricePence is not null, validate it
-  if (pricePence !== null) {
-    // Must be an integer >= 0
-    if (!Number.isInteger(pricePence) || pricePence < 0) {
-      throw new Error("Price must be a non-negative integer (in pence)");
-    }
-  }
-
-  // Update ONLY Event.pricePence
+  // Update ONLY Event.pricePence (always a number now)
   await prisma.event.update({
     where: { id: trimmedEventId },
-    data: { pricePence },
+    data: { pricePence: pricePenceNumber },
   });
 }
 
@@ -347,10 +363,10 @@ export async function reopenEvent(eventId: string, adminToken: string): Promise<
     throw new Error("Event not found");
   }
 
-  // Update Event.closedAt to null
+  // Update Event.closedAt to null (use undefined for Prisma)
   await prisma.event.update({
     where: { id: trimmedEventId },
-    data: { closedAt: null },
+    data: { closedAt: undefined },
   });
 }
 
@@ -458,7 +474,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ refun
         where: { id: payment.id },
         data: {
           status: "CANCELLED",
-          paidAt: null,
+          paidAt: undefined,
           amountPenceCaptured: 0,
         },
       });

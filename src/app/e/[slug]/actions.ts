@@ -97,7 +97,7 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
 
   // Check APP_URL environment variable
   if (!process.env.APP_URL) {
-    throw new Error("APP_URL environment variable is required");
+    return { error: "APP_URL environment variable is required" };
   }
 
   const appUrl = process.env.APP_URL.trim().replace(/\/$/, ""); // strip trailing slash
