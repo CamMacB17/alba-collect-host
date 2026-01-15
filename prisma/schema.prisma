@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum PaymentStatus {
+  PLEDGED
+  PAID
+  CANCELLED
+}
+
+model Event {
+  id             String      @id @default(cuid())
+  slug           String      @unique
+  title          String
+  pricePence     Int
+  currency       String      @default("GBP")
+  maxSpots       Int
+  organiserName  String
+  organiserEmail String?
+  status         EventStatus @default(ACTIVE)
+  createdAt      DateTime    @default(now())
+  closedAt       DateTime?
+  payments       Payment[]
+  adminToken     AdminToken?
+}
+
+model Payment {
+  id                      String        @id @default(cuid())
+  eventId                 String
+  name                    String
+  email                   String
+  amountPence             Int
+  status                  PaymentStatus @default(PLEDGED)
+  createdAt               DateTime      @default(now())
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  paidAt                  DateTime?
+  amountPenceCaptured     Int?
+  event                   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+}
+
+model AdminToken {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  token     String   @unique
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model StripeWebhookEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  type          String
+  createdAt     DateTime @default(now())
+}

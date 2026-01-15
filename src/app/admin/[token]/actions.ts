@@ -1,0 +1,474 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { cleanupPledges } from "@/lib/cleanupPledges";
+import { getStripe } from "@/lib/stripe";
+
+export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
+  // Validate inputs are non-empty after trim
+  const trimmedPaymentId = paymentId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedPaymentId || trimmedPaymentId.length === 0) {
+    throw new Error("Payment ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Payment by id AND ensure it belongs to the same eventId as the admin token
+  const payment = await prisma.payment.findUnique({
+    where: { id: trimmedPaymentId },
+  });
+
+  if (!payment) {
+    throw new Error("Payment not found");
+  }
+
+  // Verify payment belongs to the same event as the admin token
+  if (payment.eventId !== adminTokenRecord.eventId) {
+    throw new Error("Payment not found");
+  }
+
+  // Update that Payment status to CANCELLED
+  await prisma.payment.update({
+    where: { id: trimmedPaymentId },
+    data: { status: "CANCELLED" },
+  });
+}
+
+export async function markPaid(paymentId: string, adminToken: string): Promise<void> {
+  // Validate inputs are non-empty after trim
+  const trimmedPaymentId = paymentId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedPaymentId || trimmedPaymentId.length === 0) {
+    throw new Error("Payment ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Payment by id AND ensure it belongs to the same eventId as the admin token
+  const payment = await prisma.payment.findUnique({
+    where: { id: trimmedPaymentId },
+  });
+
+  if (!payment) {
+    throw new Error("Payment not found");
+  }
+
+  // Verify payment belongs to the same event as the admin token
+  if (payment.eventId !== adminTokenRecord.eventId) {
+    throw new Error("Payment not found");
+  }
+
+  // Do not allow marking CANCELLED payments as PAID
+  if (payment.status === "CANCELLED") {
+    throw new Error("Cannot mark cancelled payment as paid");
+  }
+
+  // Update payment status to PAID
+  await prisma.payment.update({
+    where: { id: trimmedPaymentId },
+    data: { status: "PAID" },
+  });
+}
+
+export async function updateEventTitle(eventId: string, title: string, adminToken: string): Promise<void> {
+  // Validate inputs are non-empty after trim
+  const trimmedEventId = eventId?.trim();
+  const trimmedTitle = title?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedEventId || trimmedEventId.length === 0) {
+    throw new Error("Event ID is required");
+  }
+
+  if (!trimmedTitle || trimmedTitle.length === 0) {
+    throw new Error("Title is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Event by id
+  const event = await prisma.event.findUnique({
+    where: { id: trimmedEventId },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Validate eventId matches the admin token's eventId
+  if (event.id !== adminTokenRecord.eventId) {
+    throw new Error("Event not found");
+  }
+
+  // Update Event.title
+  await prisma.event.update({
+    where: { id: trimmedEventId },
+    data: { title: trimmedTitle },
+  });
+}
+
+export async function updateMaxSpots(
+  eventId: string,
+  maxSpots: number | null,
+  adminToken: string
+): Promise<void> {
+  // Validate inputs
+  const trimmedEventId = eventId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedEventId || trimmedEventId.length === 0) {
+    throw new Error("Event ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Event by id
+  const event = await prisma.event.findUnique({
+    where: { id: trimmedEventId },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Validate eventId matches the admin token's eventId
+  if (event.id !== adminTokenRecord.eventId) {
+    throw new Error("Event not found");
+  }
+
+  // If maxSpots is not null, validate it
+  if (maxSpots !== null) {
+    // maxSpots must be >= 1
+    if (maxSpots < 1) {
+      throw new Error("Max spots must be at least 1");
+    }
+
+    // Count current active payments for the event
+    const activeCount = await prisma.payment.count({
+      where: {
+        eventId: event.id,
+        status: {
+          in: ["PLEDGED", "PAID"],
+        },
+      },
+    });
+
+    // If maxSpots < activeCount, throw error
+    if (maxSpots < activeCount) {
+      throw new Error("Cannot set max spots below current number of participants");
+    }
+  }
+
+  // Update Event.maxSpots
+  await prisma.event.update({
+    where: { id: trimmedEventId },
+    data: { maxSpots },
+  });
+}
+
+export async function updateEventPrice(
+  eventId: string,
+  pricePence: number | null,
+  adminToken: string
+): Promise<void> {
+  // Validate inputs
+  const trimmedEventId = eventId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedEventId || trimmedEventId.length === 0) {
+    throw new Error("Event ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Event by id
+  const event = await prisma.event.findUnique({
+    where: { id: trimmedEventId },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Validate eventId matches the admin token's eventId
+  if (event.id !== adminTokenRecord.eventId) {
+    throw new Error("Event not found");
+  }
+
+  // If pricePence is not null, validate it
+  if (pricePence !== null) {
+    // Must be an integer >= 0
+    if (!Number.isInteger(pricePence) || pricePence < 0) {
+      throw new Error("Price must be a non-negative integer (in pence)");
+    }
+  }
+
+  // Update ONLY Event.pricePence
+  await prisma.event.update({
+    where: { id: trimmedEventId },
+    data: { pricePence },
+  });
+}
+
+export async function closeEvent(eventId: string, adminToken: string): Promise<void> {
+  // Validate inputs
+  const trimmedEventId = eventId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedEventId || trimmedEventId.length === 0) {
+    throw new Error("Event ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Event by id
+  const event = await prisma.event.findUnique({
+    where: { id: trimmedEventId },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Validate eventId matches the admin token's eventId
+  if (event.id !== adminTokenRecord.eventId) {
+    throw new Error("Event not found");
+  }
+
+  // Update Event.closedAt to new Date()
+  await prisma.event.update({
+    where: { id: trimmedEventId },
+    data: { closedAt: new Date() },
+  });
+}
+
+export async function reopenEvent(eventId: string, adminToken: string): Promise<void> {
+  // Validate inputs
+  const trimmedEventId = eventId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedEventId || trimmedEventId.length === 0) {
+    throw new Error("Event ID is required");
+  }
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Look up Event by id
+  const event = await prisma.event.findUnique({
+    where: { id: trimmedEventId },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Validate eventId matches the admin token's eventId
+  if (event.id !== adminTokenRecord.eventId) {
+    throw new Error("Event not found");
+  }
+
+  // Update Event.closedAt to null
+  await prisma.event.update({
+    where: { id: trimmedEventId },
+    data: { closedAt: null },
+  });
+}
+
+export async function cleanupAbandonedPledges(adminToken: string): Promise<{ cleaned: number }> {
+  // Validate admin token
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  // Look up AdminToken by token string to verify it's valid
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Call the cleanup function and return the count
+  const count = await cleanupPledges();
+  return { cleaned: count };
+}
+
+export async function refundPayment(paymentId: string, adminToken: string): Promise<void> {
+  const trimmedPaymentId = paymentId?.trim();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedPaymentId || !trimmedToken) {
+    throw new Error("Invalid inputs");
+  }
+
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: trimmedPaymentId },
+  });
+
+  if (!payment || payment.eventId !== adminTokenRecord.eventId || payment.status !== "PAID") {
+    throw new Error("Payment not found or not eligible for refund");
+  }
+
+  if (!payment.stripePaymentIntentId) {
+    throw new Error("Payment has no Stripe Payment Intent ID for refund");
+  }
+
+  const stripe = getStripe();
+  await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+
+  await prisma.payment.update({
+    where: { id: trimmedPaymentId },
+    data: {
+      status: "CANCELLED",
+      paidAt: null,
+      amountPenceCaptured: 0,
+    },
+  });
+}
+
+export async function refundAllPaidPayments(adminToken: string): Promise<{ refunded: number; failed: number }> {
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    throw new Error("Admin token is required");
+  }
+
+  const adminTokenRecord = await prisma.adminToken.findUnique({
+    where: { token: trimmedToken },
+  });
+
+  if (!adminTokenRecord) {
+    throw new Error("Admin link not found");
+  }
+
+  // Find all PAID payments for this event
+  const paidPayments = await prisma.payment.findMany({
+    where: {
+      eventId: adminTokenRecord.eventId,
+      status: "PAID",
+    },
+  });
+
+  const stripe = getStripe();
+  let refunded = 0;
+  let failed = 0;
+
+  // Refund each payment
+  for (const payment of paidPayments) {
+    try {
+      if (!payment.stripePaymentIntentId) {
+        failed++;
+        continue;
+      }
+
+      await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: "CANCELLED",
+          paidAt: null,
+          amountPenceCaptured: 0,
+        },
+      });
+
+      refunded++;
+    } catch (err) {
+      console.error(`[refundAllPaidPayments] Failed to refund payment ${payment.id}:`, err);
+      failed++;
+    }
+  }
+
+  return { refunded, failed };
+}
