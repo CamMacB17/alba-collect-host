@@ -124,6 +124,23 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   // Calculate spotsLeft
   const spotsLeft = event.maxSpots === null ? null : Math.max(0, event.maxSpots - spotsTaken);
 
+  // Fetch last 10 admin action logs for this event
+  const actionLogs = await prisma.adminActionLog.findMany({
+    where: {
+      eventId: event.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 10,
+    select: {
+      id: true,
+      actionType: true,
+      metadataJson: true,
+      createdAt: true,
+    },
+  });
+
   // Format price for display
   const priceDisplay = event.pricePence === null ? "Free" : `£${(event.pricePence / 100).toFixed(2)}`;
   const isClosed = event.closedAt !== null;
@@ -283,6 +300,43 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Recent Actions</h2>
+        {actionLogs.length === 0 ? (
+          <p className="text-gray-600 text-sm">No actions logged yet</p>
+        ) : (
+          <div className="space-y-2">
+            {actionLogs.map((log) => {
+              const metadata = log.metadataJson as Record<string, unknown>;
+              let summary = "";
+              
+              if (log.actionType === "REFUND_ALL") {
+                const refunded = metadata.refunded as number | undefined;
+                const attempted = metadata.attempted as number | undefined;
+                const failed = metadata.failed as number | undefined;
+                summary = `Refunded ${refunded || 0} of ${attempted || 0} payments${failed && failed > 0 ? `, ${failed} failed` : ""}`;
+              } else if (log.actionType === "EVENT_CLOSE") {
+                summary = "Event closed";
+              } else if (log.actionType === "EVENT_REOPEN") {
+                summary = "Event reopened";
+              }
+
+              return (
+                <div key={log.id} className="text-sm border-b pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-medium">{log.actionType}</span>
+                      {summary && <span className="text-gray-600 ml-2">— {summary}</span>}
+                    </div>
+                    <span className="text-gray-500 text-xs">{formatDate(log.createdAt)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </main>

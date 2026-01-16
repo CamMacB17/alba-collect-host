@@ -7,6 +7,16 @@ export default function CloseReopenButton({ eventId, token, isClosed }: { eventI
   const router = useRouter();
 
   const handleClick = async () => {
+    if (isClosed) {
+      if (!confirm("Reopen this event? People will be able to join again.")) {
+        return;
+      }
+    } else {
+      if (!confirm("Close this event? People will no longer be able to join.")) {
+        return;
+      }
+    }
+
     try {
       if (isClosed) {
         await reopenEvent(eventId, token);

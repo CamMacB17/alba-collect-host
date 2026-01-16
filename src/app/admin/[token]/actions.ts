@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
+import { logAdminAction } from "@/lib/adminActionLog";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
   // Validate inputs are non-empty after trim
@@ -358,6 +359,16 @@ export async function closeEvent(eventId: string, adminToken: string): Promise<v
     where: { id: trimmedEventId },
     data: { closedAt: new Date() },
   });
+
+  // Log the action
+  await logAdminAction({
+    eventId: event.id,
+    adminToken: trimmedToken,
+    actionType: "EVENT_CLOSE",
+    metadata: {
+      timestamp: new Date().toISOString(),
+    },
+  });
 }
 
 export async function reopenEvent(eventId: string, adminToken: string): Promise<void> {
@@ -400,6 +411,16 @@ export async function reopenEvent(eventId: string, adminToken: string): Promise<
   await prisma.event.update({
     where: { id: trimmedEventId },
     data: { closedAt: undefined },
+  });
+
+  // Log the action
+  await logAdminAction({
+    eventId: event.id,
+    adminToken: trimmedToken,
+    actionType: "EVENT_REOPEN",
+    metadata: {
+      timestamp: new Date().toISOString(),
+    },
   });
 }
 
@@ -611,5 +632,21 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
     }
   }
 
-  return { attempted: paidPayments.length, refunded, skippedAlreadyRefunded, failed };
+  const result = { attempted: paidPayments.length, refunded, skippedAlreadyRefunded, failed };
+
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "REFUND_ALL",
+    metadata: {
+      attempted: result.attempted,
+      refunded: result.refunded,
+      skippedAlreadyRefunded: result.skippedAlreadyRefunded,
+      failed: result.failed,
+      timestamp: new Date().toISOString(),
+    },
+  });
+
+  return result;
 }
