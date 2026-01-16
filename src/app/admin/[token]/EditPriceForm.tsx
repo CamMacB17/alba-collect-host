@@ -61,10 +61,10 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
 
   if (isPriceLocked) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           <span
-            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
             style={{
               background: "rgba(226, 54, 66, 0.15)",
               color: "#E23642",
@@ -86,10 +86,10 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <div className="flex gap-3 items-start">
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-sm font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>£</span>
+      <div className="space-y-1.5">
+        <div className="flex gap-2 items-start">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium" style={{ color: "#FFFFE0", opacity: 0.7 }}>£</span>
             <input
               type="text"
               id="price"
@@ -97,7 +97,7 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
               defaultValue={currentPricePounds ?? ""}
               placeholder="0.00"
               disabled={isPriceLocked}
-              className="px-3 py-2 rounded-lg w-32 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-2.5 py-2 rounded w-24 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               style={{
                 background: "#2C2C2F",
                 border: "1px solid #404043",
@@ -116,24 +116,10 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
           <button
             type="submit"
             disabled={isPriceLocked}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="px-3 py-2 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{
               background: isPriceLocked ? "#404043" : "#10b981",
               color: "white"
-            }}
-            onMouseEnter={(e) => {
-              if (!isPriceLocked) {
-                e.currentTarget.style.background = "#059669";
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isPriceLocked) {
-                e.currentTarget.style.background = "#10b981";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }
             }}
           >
             Save

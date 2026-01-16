@@ -26,8 +26,8 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <div className="flex gap-3 items-start">
+      <div className="space-y-1.5">
+        <div className="flex gap-2 items-start">
           <input
             type="number"
             id="maxSpots"
@@ -35,7 +35,7 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
             min="1"
             defaultValue={currentMaxSpots ?? ""}
             placeholder="Unlimited"
-            className="px-3 py-2 rounded-lg w-32 transition-all"
+            className="px-2.5 py-2 rounded w-24 transition-all text-sm"
             style={{
               background: "#2C2C2F",
               border: "1px solid #404043",
@@ -52,20 +52,10 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
           />
           <button
             type="submit"
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+            className="px-3 py-2 rounded text-xs font-medium transition-colors whitespace-nowrap"
             style={{
               background: "#10b981",
               color: "white"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#059669";
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#10b981";
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "none";
             }}
           >
             Save

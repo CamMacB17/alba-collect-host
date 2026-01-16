@@ -7,7 +7,7 @@
   --alba-yellow: #FBB924;
   --alba-red: #E23642;
   --alba-green: #10b981;
-  --alba-card-bg: #363639;
+  --alba-card-bg: #333338;
   --alba-border: #404043;
 }
 
@@ -34,20 +34,20 @@ body {
 .card {
   background: var(--alba-card-bg);
   border: 1px solid var(--alba-border);
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Input styles */
 input[type="text"],
 input[type="email"],
 input[type="number"] {
-  background: var(--alba-card-bg);
+  background: #2C2C2F;
   border: 1px solid var(--alba-border);
   color: var(--alba-text);
   border-radius: 6px;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
 }
 
 input[type="text"]:focus,
@@ -64,16 +64,14 @@ input[type="number"]:focus {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-primary:hover {
   background: #e6731f;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(247, 130, 34, 0.3);
 }
 
 .btn-success {
@@ -81,7 +79,7 @@ input[type="number"]:focus {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -89,8 +87,6 @@ input[type="number"]:focus {
 
 .btn-success:hover {
   background: #059669;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {
@@ -98,14 +94,14 @@ input[type="number"]:focus {
   color: var(--alba-text);
   border: 1px solid var(--alba-border);
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  background: #404043;
+  background: #3a3a3f;
   border-color: #505053;
 }
 
@@ -114,14 +110,12 @@ input[type="number"]:focus {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-danger:hover {
   background: #c92e3a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(226, 54, 66, 0.3);
 }
