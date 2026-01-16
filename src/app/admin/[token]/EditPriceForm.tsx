@@ -88,9 +88,9 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
     <form onSubmit={handleSubmit}>
       <div className="space-y-1">
         <div className="flex gap-2 items-start">
-          <div className="relative flex-1">
+          <div className="relative w-full flex-1">
             <span 
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none z-10"
+              className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 pointer-events-none z-10"
             >
               £
             </span>

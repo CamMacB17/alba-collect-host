@@ -126,8 +126,8 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
-      <div className="w-full max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen py-10 lg:py-10 px-4 sm:px-6 lg:px-8 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
+      <div className="w-full max-w-5xl mx-auto space-y-4 lg:space-y-4">
         {/* Success Section - RENDERED ABOVE FORM */}
         {result && (
           <div 
@@ -226,11 +226,12 @@ export default function CreatePage() {
         {/* Form Section */}
         <div className="card">
           <h1 className="text-2xl font-semibold mb-2" style={{ color: "#FFFFE0" }}>Create an Event</h1>
-          <p className="mb-8 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="mb-6 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
             Create your golf event, get a link, collect payments.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6">
+            {/* Left Column */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Event Title *
@@ -257,13 +258,14 @@ export default function CreatePage() {
               />
             </div>
 
+            {/* Right Column */}
             <div>
               <label htmlFor="price" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Price per person *
               </label>
-              <div className="relative">
+              <div className="relative w-full">
                 <span 
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none z-10"
+                  className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 pointer-events-none z-10"
                 >
                   £
                 </span>
@@ -275,7 +277,7 @@ export default function CreatePage() {
                   step="0.01"
                   min="0"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
+                  className="w-full pl-12 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
                   style={{
                     background: "#2C2C2F",
                     border: "1px solid #404043",
@@ -296,6 +298,34 @@ export default function CreatePage() {
               </p>
             </div>
 
+            {/* Left Column */}
+            <div>
+              <label htmlFor="organiserName" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Organiser Name *
+              </label>
+              <input
+                type="text"
+                id="organiserName"
+                name="organiserName"
+                required
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Right Column */}
             <div>
               <label htmlFor="maxSpots" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Max Spots *
@@ -323,14 +353,41 @@ export default function CreatePage() {
               />
             </div>
 
+            {/* Left Column */}
+            <div>
+              <label htmlFor="organiserEmail" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Organiser Email
+              </label>
+              <input
+                type="email"
+                id="organiserEmail"
+                name="organiserEmail"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Right Column */}
             <div>
               <label htmlFor="totalCost" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Total cost (optional)
               </label>
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
+                <div className="relative w-full flex-1">
                   <span 
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none z-10"
+                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 pointer-events-none z-10"
                   >
                     £
                   </span>
@@ -342,7 +399,7 @@ export default function CreatePage() {
                     min="0"
                     value={totalCost}
                     onChange={(e) => setTotalCost(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
+                    className="w-full pl-12 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
                     style={{
                       background: "#2C2C2F",
                       border: "1px solid #404043",
@@ -379,82 +436,34 @@ export default function CreatePage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="organiserName" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                Organiser Name *
-              </label>
-              <input
-                type="text"
-                id="organiserName"
-                name="organiserName"
-                required
-                className="w-full px-4 py-2.5 rounded-lg transition-all"
+            {/* Submit button spans full width on mobile, full width in grid on desktop */}
+            <div className="lg:col-span-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-6 rounded-lg font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
+                  background: loading ? "#404043" : "#F78222",
+                  color: "white"
                 }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = "#e6731f";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(247, 130, 34, 0.3)";
+                  }
                 }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = "#F78222";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
                 }}
-              />
+              >
+                {loading ? "Creating..." : "Create Event"}
+              </button>
             </div>
-
-            <div>
-              <label htmlFor="organiserEmail" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                Organiser Email
-              </label>
-              <input
-                type="email"
-                id="organiserEmail"
-                name="organiserEmail"
-                className="w-full px-4 py-2.5 rounded-lg transition-all"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-6 rounded-lg font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: loading ? "#404043" : "#F78222",
-                color: "white"
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.background = "#e6731f";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(247, 130, 34, 0.3)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.background = "#F78222";
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
-            >
-              {loading ? "Creating..." : "Create Event"}
-            </button>
           </form>
 
           {error && (
