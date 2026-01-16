@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { sendPaymentReceipt, sendEmail } from "@/lib/email";
+import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import Stripe from "stripe";
 import { headers } from "next/headers";
@@ -154,20 +154,16 @@ export async function POST(request: NextRequest) {
             baseUrl = `${proto}://${host}`;
           }
 
-          // Send payment receipt email (idempotent: only if receiptEmailSentAt is null)
+          // Send payment confirmation email (idempotent: only if receiptEmailSentAt is null)
           try {
-            await sendPaymentReceipt({
+            const eventUrl = `${baseUrl}/e/${payment.event.slug}`;
+            
+            await sendPaymentConfirmationEmail({
               to: payment.email,
-              event: {
-                title: payment.event.title,
-                slug: payment.event.slug,
-                organiserName: payment.event.organiserName,
-              },
-              payment: {
-                name: payment.name,
-                amountPence: payment.amountPence,
-              },
-              baseUrl,
+              name: payment.name,
+              eventTitle: payment.event.title,
+              amountPence: payment.amountPence,
+              eventUrl,
             });
 
             // Mark email as sent
@@ -177,7 +173,7 @@ export async function POST(request: NextRequest) {
             });
           } catch (emailErr) {
             // Log email error but don't fail the webhook
-            console.error("[webhook] Failed to send payment receipt email", {
+            console.error("[webhook] Failed to send payment confirmation email", {
               paymentId,
               error: emailErr,
             });

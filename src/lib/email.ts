@@ -3,31 +3,35 @@ import { Resend } from "resend";
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
 
 /**
- * Send payment receipt email
+ * Send payment confirmation email
  */
-export async function sendPaymentReceipt(args: {
+export async function sendPaymentConfirmationEmail(args: {
   to: string;
-  event: { title: string; slug: string; organiserName?: string | null };
-  payment: { name: string; amountPence: number };
-  baseUrl: string;
+  name: string;
+  eventTitle: string;
+  amountPence: number;
+  eventUrl: string;
 }): Promise<void> {
-  const { to, event, payment, baseUrl } = args;
+  const { to, name, eventTitle, amountPence, eventUrl } = args;
 
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping payment receipt email", { to });
+  // Guard missing email address
+  if (!to || to.trim().length === 0) {
+    console.warn("[email] Missing email address, skipping payment confirmation", { name, eventTitle });
     return;
   }
 
-  const priceDisplay =
-    payment.amountPence === null || payment.amountPence === 0
-      ? "Free"
-      : `£${(payment.amountPence / 100).toFixed(2)}`;
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set, skipping payment confirmation email", { to });
+    return;
+  }
 
-  const eventUrl = `${baseUrl}/e/${event.slug}`;
-  const organiserLine = event.organiserName ? `\nOrganiser: ${event.organiserName}` : "";
+  const amountDisplay =
+    amountPence === null || amountPence === 0
+      ? "Free"
+      : `£${(amountPence / 100).toFixed(2)}`;
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -36,64 +40,61 @@ export async function sendPaymentReceipt(args: {
         <meta charset="utf-8">
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h2>You're in – ${escapeHtml(event.title)}</h2>
-        <p>Hi ${escapeHtml(payment.name)},</p>
-        <p>You're confirmed for: <strong>${escapeHtml(event.title)}</strong></p>
-        <p>Price paid: <strong>${escapeHtml(priceDisplay)}</strong>${organiserLine ? escapeHtml(organiserLine) : ""}</p>
-        <p><a href="${eventUrl}" style="color: #0066cc;">View event page</a></p>
-        <p>See you there!</p>
+        <h2>Payment confirmed – ${escapeHtml(eventTitle)}</h2>
+        <p>Hi ${escapeHtml(name)},</p>
+        <p>Your payment of <strong>${escapeHtml(amountDisplay)}</strong> for <strong>${escapeHtml(eventTitle)}</strong> has been confirmed.</p>
+        <p><a href="${eventUrl}">View event page</a></p>
       </body>
     </html>
   `;
 
-  const textBody = `Hi ${payment.name},
+  const textBody = `Hi ${name},
 
-You're confirmed for: ${event.title}
+Your payment of ${amountDisplay} for ${eventTitle} has been confirmed.
 
-Price paid: ${priceDisplay}${organiserLine}
-
-View event: ${eventUrl}
-
-See you there!`;
+View event: ${eventUrl}`;
 
   try {
     await resend.emails.send({
       from: fromEmail,
       to,
-      subject: `You're in – ${event.title}`,
+      subject: `Payment confirmed – ${eventTitle}`,
       html: htmlBody,
       text: textBody,
     });
   } catch (error) {
-    console.error("[email] Failed to send payment receipt", { to, error });
+    console.error("[email] Failed to send payment confirmation email", { to, error });
     throw error;
   }
 }
 
 /**
- * Send refund receipt email
+ * Send refund confirmation email
  */
-export async function sendRefundReceipt(args: {
+export async function sendRefundConfirmationEmail(args: {
   to: string;
-  event: { title: string; slug: string };
-  payment: { name: string; amountPence: number };
-  refund: { id: string; amount: number };
-  baseUrl: string;
+  name: string;
+  eventTitle: string;
+  amountPence: number;
+  eventUrl: string;
 }): Promise<void> {
-  const { to, event, payment, refund, baseUrl } = args;
+  const { to, name, eventTitle, amountPence, eventUrl } = args;
 
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping refund receipt email", { to });
+  // Guard missing email address
+  if (!to || to.trim().length === 0) {
+    console.warn("[email] Missing email address, skipping refund confirmation", { name, eventTitle });
     return;
   }
 
-  const priceDisplay =
-    payment.amountPence === null || payment.amountPence === 0
-      ? "Free"
-      : `£${(payment.amountPence / 100).toFixed(2)}`;
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set, skipping refund confirmation email", { to });
+    return;
+  }
 
-  const refundAmountDisplay = `£${(refund.amount / 100).toFixed(2)}`;
-  const eventUrl = `${baseUrl}/e/${event.slug}`;
+  const amountDisplay =
+    amountPence === null || amountPence === 0
+      ? "Free"
+      : `£${(amountPence / 100).toFixed(2)}`;
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -102,40 +103,30 @@ export async function sendRefundReceipt(args: {
         <meta charset="utf-8">
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h2>Refund processed – ${escapeHtml(event.title)}</h2>
-        <p>Hi ${escapeHtml(payment.name)},</p>
-        <p>Your payment for <strong>${escapeHtml(event.title)}</strong> has been refunded.</p>
-        <p>Original amount: <strong>${escapeHtml(priceDisplay)}</strong></p>
-        <p>Refund amount: <strong>${escapeHtml(refundAmountDisplay)}</strong></p>
-        <p>Refund ID: ${escapeHtml(refund.id)}</p>
-        <p><a href="${eventUrl}" style="color: #0066cc;">View event page</a></p>
-        <p>If you have any questions, please contact the event organiser.</p>
+        <h2>Refund processed – ${escapeHtml(eventTitle)}</h2>
+        <p>Hi ${escapeHtml(name)},</p>
+        <p>Your payment of <strong>${escapeHtml(amountDisplay)}</strong> for <strong>${escapeHtml(eventTitle)}</strong> has been refunded.</p>
+        <p><a href="${eventUrl}">View event page</a></p>
       </body>
     </html>
   `;
 
-  const textBody = `Hi ${payment.name},
+  const textBody = `Hi ${name},
 
-Your payment for ${event.title} has been refunded.
+Your payment of ${amountDisplay} for ${eventTitle} has been refunded.
 
-Original amount: ${priceDisplay}
-Refund amount: ${refundAmountDisplay}
-Refund ID: ${refund.id}
-
-View event: ${eventUrl}
-
-If you have any questions, please contact the event organiser.`;
+View event: ${eventUrl}`;
 
   try {
     await resend.emails.send({
       from: fromEmail,
       to,
-      subject: `Refund processed – ${event.title}`,
+      subject: `Refund processed – ${eventTitle}`,
       html: htmlBody,
       text: textBody,
     });
   } catch (error) {
-    console.error("[email] Failed to send refund receipt", { to, error });
+    console.error("[email] Failed to send refund confirmation email", { to, error });
     throw error;
   }
 }
@@ -155,8 +146,8 @@ function escapeHtml(text: string): string {
 }
 
 /**
- * Legacy sendEmail function for backward compatibility
- * @deprecated Use sendPaymentReceipt or sendRefundReceipt instead
+ * Legacy sendEmail function for backward compatibility (organiser notifications)
+ * @deprecated Use sendPaymentConfirmationEmail or sendRefundConfirmationEmail instead
  */
 export async function sendEmail(args: {
   to: string;
@@ -164,6 +155,11 @@ export async function sendEmail(args: {
   body: string;
 }): Promise<void> {
   const { to, subject, body } = args;
+
+  if (!to || to.trim().length === 0) {
+    console.warn("[email] Missing email address, skipping email", { subject });
+    return;
+  }
 
   if (!resend) {
     console.warn("[email] RESEND_API_KEY not set, skipping email", { to, subject });

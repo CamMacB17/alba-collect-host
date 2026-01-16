@@ -5,7 +5,7 @@ import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logAdminAction } from "@/lib/adminActionLog";
-import { sendRefundReceipt } from "@/lib/email";
+import { sendRefundConfirmationEmail } from "@/lib/email";
 import { headers } from "next/headers";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
@@ -530,21 +530,15 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
           baseUrl = `${proto}://${host}`;
         }
 
-        await sendRefundReceipt({
+        const eventUrl = `${baseUrl}/e/${updatedPayment.event.slug}`;
+        const refundAmount = updatedPayment.amountPenceCaptured || updatedPayment.amountPence;
+
+        await sendRefundConfirmationEmail({
           to: updatedPayment.email,
-          event: {
-            title: updatedPayment.event.title,
-            slug: updatedPayment.event.slug,
-          },
-          payment: {
-            name: updatedPayment.name,
-            amountPence: updatedPayment.amountPence,
-          },
-          refund: {
-            id: updatedPayment.stripeRefundId!,
-            amount: updatedPayment.amountPenceCaptured || updatedPayment.amountPence,
-          },
-          baseUrl,
+          name: updatedPayment.name,
+          eventTitle: updatedPayment.event.title,
+          amountPence: refundAmount,
+          eventUrl,
         });
 
         // Mark refund email as sent
@@ -701,21 +695,15 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
 
         if (updatedPayment && updatedPayment.event && !updatedPayment.refundEmailSentAt) {
           try {
-            await sendRefundReceipt({
+            const eventUrl = `${baseUrl}/e/${updatedPayment.event.slug}`;
+            const refundAmount = updatedPayment.amountPenceCaptured || updatedPayment.amountPence;
+
+            await sendRefundConfirmationEmail({
               to: updatedPayment.email,
-              event: {
-                title: updatedPayment.event.title,
-                slug: updatedPayment.event.slug,
-              },
-              payment: {
-                name: updatedPayment.name,
-                amountPence: updatedPayment.amountPence,
-              },
-              refund: {
-                id: refundId,
-                amount: updatedPayment.amountPenceCaptured || updatedPayment.amountPence,
-              },
-              baseUrl,
+              name: updatedPayment.name,
+              eventTitle: updatedPayment.event.title,
+              amountPence: refundAmount,
+              eventUrl,
             });
 
             // Mark refund email as sent
