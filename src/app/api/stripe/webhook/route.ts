@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { assertValidTransition } from "@/lib/paymentTransitions";
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
@@ -86,6 +87,20 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
+        // Validate transition: only allow PLEDGED -> PAID
+        try {
+          assertValidTransition(existingPayment.status, "PAID");
+        } catch (err) {
+          console.error("[webhook] Invalid payment status transition", {
+            paymentId,
+            from: existingPayment.status,
+            to: "PAID",
+            error: err instanceof Error ? err.message : String(err),
+          });
+          // Return success to prevent Stripe retries, but log the error
+          return NextResponse.json({ received: true });
+        }
+
         // Prepare update data, preserving existing paidAt and amountPenceCaptured if set
         const updateData: {
           status: "PAID";
@@ -101,8 +116,8 @@ export async function POST(request: NextRequest) {
             : null,
         };
 
-        // Only set paidAt if not already set
-        if (!existingPayment.paidAt) {
+        // Only set paidAt when transitioning PLEDGED -> PAID, and if not already set
+        if (existingPayment.status === "PLEDGED" && !existingPayment.paidAt) {
           updateData.paidAt = new Date();
         }
 
@@ -220,6 +235,33 @@ ${spotsDisplay}`,
       }
 
       try {
+        // Load payment to check current status
+        const existingPayment = await prisma.payment.findUnique({
+          where: { id: paymentId },
+        });
+
+        if (!existingPayment) {
+          console.warn("[webhook] Payment not found for expired session", {
+            paymentId,
+            sessionId: session.id,
+          });
+          return NextResponse.json({ received: true });
+        }
+
+        // Validate transition: only allow PLEDGED -> CANCELLED
+        try {
+          assertValidTransition(existingPayment.status, "CANCELLED");
+        } catch (err) {
+          console.error("[webhook] Invalid payment status transition for expired session", {
+            paymentId,
+            from: existingPayment.status,
+            to: "CANCELLED",
+            error: err instanceof Error ? err.message : String(err),
+          });
+          // Return success to prevent Stripe retries, but log the error
+          return NextResponse.json({ received: true });
+        }
+
         await prisma.payment.update({
           where: { id: paymentId },
           data: { status: "CANCELLED" },

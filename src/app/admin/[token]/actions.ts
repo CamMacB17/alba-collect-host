@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
+import { assertValidTransition } from "@/lib/paymentTransitions";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
   // Validate inputs are non-empty after trim
@@ -39,6 +40,9 @@ export async function cancelPledge(paymentId: string, adminToken: string): Promi
   if (payment.eventId !== adminTokenRecord.eventId) {
     throw new Error("Payment not found");
   }
+
+  // Validate transition: only allow PLEDGED -> CANCELLED
+  assertValidTransition(payment.status, "CANCELLED");
 
   // Update that Payment status to CANCELLED
   await prisma.payment.update({
@@ -83,15 +87,23 @@ export async function markPaid(paymentId: string, adminToken: string): Promise<v
     throw new Error("Payment not found");
   }
 
-  // Do not allow marking CANCELLED payments as PAID
-  if (payment.status === "CANCELLED") {
-    throw new Error("Cannot mark cancelled payment as paid");
+  // Validate transition: only allow PLEDGED -> PAID
+  assertValidTransition(payment.status, "PAID");
+
+  // Prepare update data
+  const updateData: { status: "PAID"; paidAt?: Date } = {
+    status: "PAID",
+  };
+
+  // Only set paidAt when transitioning PLEDGED -> PAID, and if not already set
+  if (payment.status === "PLEDGED" && !payment.paidAt) {
+    updateData.paidAt = new Date();
   }
 
   // Update payment status to PAID
   await prisma.payment.update({
     where: { id: trimmedPaymentId },
-    data: { status: "PAID" },
+    data: updateData,
   });
 }
 
@@ -538,23 +550,43 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
           where: { id: payment.id },
         });
 
-        if (!currentPayment || currentPayment.status !== "PAID" || currentPayment.refundedAt !== null || currentPayment.stripeRefundId !== null) {
-          throw new Error("Payment is no longer eligible for refund");
+        if (!currentPayment) {
+          throw new Error("Payment not found");
+        }
+
+        // Validate transition: only allow PAID -> CANCELLED
+        assertValidTransition(currentPayment.status, "CANCELLED");
+
+        // Hard fail if already refunded
+        if (currentPayment.refundedAt !== null || currentPayment.stripeRefundId !== null) {
+          throw new Error("Payment has already been refunded");
         }
 
         // Call Stripe refund
         const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
 
+        // Prepare update data
+        const updateData: {
+          status: "CANCELLED";
+          paidAt: undefined;
+          amountPenceCaptured: number;
+          refundedAt: Date;
+          stripeRefundId: string;
+        } = {
+          status: "CANCELLED",
+          paidAt: undefined,
+          amountPenceCaptured: 0,
+          refundedAt: new Date(),
+          stripeRefundId: refund.id,
+        };
+
+        // Only set refundedAt when transitioning PAID -> CANCELLED (already validated above)
+        // refundedAt is already set in updateData above
+
         // Update payment with refund metadata
         await tx.payment.update({
           where: { id: payment.id },
-          data: {
-            status: "CANCELLED",
-            paidAt: undefined,
-            amountPenceCaptured: 0,
-            refundedAt: new Date(),
-            stripeRefundId: refund.id,
-          },
+          data: updateData,
         });
       });
 
