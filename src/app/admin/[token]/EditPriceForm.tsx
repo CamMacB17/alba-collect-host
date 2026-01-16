@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateEventPrice } from "./actions";
 
-export default function EditPriceForm({ eventId, currentPricePence, token }: { eventId: string; currentPricePence: number | null; token: string }) {
+export default function EditPriceForm({ eventId, currentPricePence, token, isPriceLocked }: { eventId: string; currentPricePence: number | null; token: string; isPriceLocked: boolean }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
@@ -14,13 +14,23 @@ export default function EditPriceForm({ eventId, currentPricePence, token }: { e
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    
+    if (isPriceLocked) {
+      setError("Price is locked after the first payment.");
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const priceValue = formData.get("price") as string;
 
     try {
       // Empty string = free (null)
       if (priceValue === "" || priceValue.trim() === "") {
-        await updateEventPrice(eventId, null, token);
+        const result = await updateEventPrice(eventId, null, token);
+        if (result.ok === false) {
+          setError(result.error);
+          return;
+        }
         router.refresh();
         return;
       }
@@ -37,12 +47,25 @@ export default function EditPriceForm({ eventId, currentPricePence, token }: { e
       // Round to nearest penny and convert to pence
       const pricePence = Math.round(pounds * 100);
 
-      await updateEventPrice(eventId, pricePence, token);
+      const result = await updateEventPrice(eventId, pricePence, token);
+      if (result.ok === false) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update price");
     }
   };
+
+  if (isPriceLocked) {
+    return (
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">Price is locked after the first payment.</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="mb-4">
@@ -57,11 +80,13 @@ export default function EditPriceForm({ eventId, currentPricePence, token }: { e
             name="price"
             defaultValue={currentPricePounds ?? ""}
             placeholder="Free"
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+            disabled={isPriceLocked}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            disabled={isPriceLocked}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Save price
           </button>

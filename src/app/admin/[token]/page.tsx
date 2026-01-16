@@ -98,6 +98,8 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
     },
   });
 
+  console.log("[V3 price-lock] Admin page paidCount", { eventId: event.id, paidCount, isPriceLocked: paidCount > 0 });
+
   // Count PLEDGED payments
   const pledgedCount = await prisma.payment.count({
     where: {
@@ -172,7 +174,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           <p className="mb-2">
             <span className="font-medium">Current price:</span> {priceDisplay}
           </p>
-          <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} />
+          <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
         </div>
         
         <div>

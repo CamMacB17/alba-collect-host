@@ -225,7 +225,7 @@ export async function updateEventPrice(
   eventId: string,
   pricePence: number | null,
   adminToken: string
-): Promise<{ error: string } | void> {
+): Promise<{ ok: true } | { ok: false; error: string }> {
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -240,18 +240,18 @@ export async function updateEventPrice(
 
   // Validate pricePence is a number
   if (pricePence === null || pricePence === undefined || isNaN(pricePence)) {
-    return { error: "Price must be a number" };
+    return { ok: false, error: "Price must be a number" };
   }
 
   // Ensure pricePence is a number type
   const pricePenceNumber = Number(pricePence);
   if (isNaN(pricePenceNumber)) {
-    return { error: "Price must be a number" };
+    return { ok: false, error: "Price must be a number" };
   }
 
   // pricePence must be >= 0
   if (pricePenceNumber < 0) {
-    return { error: "Price must be 0 or more" };
+    return { ok: false, error: "Price must be 0 or more" };
   }
 
   // Look up AdminToken by token string
@@ -263,9 +263,13 @@ export async function updateEventPrice(
     throw new Error("Admin link not found");
   }
 
-  // Look up Event by id
+  // Look up Event by id and count PAID payments in a single query if possible
   const event = await prisma.event.findUnique({
     where: { id: trimmedEventId },
+    select: {
+      id: true,
+      pricePence: true,
+    },
   });
 
   if (!event) {
@@ -277,11 +281,28 @@ export async function updateEventPrice(
     throw new Error("Event not found");
   }
 
+  // Hard rule: Price cannot change after any PAID payments exist
+  const paidCount = await prisma.payment.count({
+    where: {
+      eventId: event.id,
+      status: "PAID",
+    },
+  });
+
+  if (paidCount > 0) {
+    // Check if price is actually changing
+    if (event.pricePence !== pricePenceNumber) {
+      return { ok: false, error: "Price is locked after the first payment." };
+    }
+  }
+
   // Update ONLY Event.pricePence (always a number now)
   await prisma.event.update({
     where: { id: trimmedEventId },
     data: { pricePence: pricePenceNumber },
   });
+
+  return { ok: true };
 }
 
 export async function closeEvent(eventId: string, adminToken: string): Promise<void> {
