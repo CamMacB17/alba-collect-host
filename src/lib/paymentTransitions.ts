@@ -1,5 +1,3 @@
-import { PaymentStatus } from "@prisma/client";
-
 /**
  * Validates payment status transitions.
  * Allowed transitions:
@@ -10,17 +8,14 @@ import { PaymentStatus } from "@prisma/client";
  *
  * @throws Error if transition is invalid
  */
-export function assertValidTransition(
-  from: PaymentStatus,
-  to: PaymentStatus
-): void {
+export function assertValidPaymentTransition(from: string, to: string): void {
   // Allow no-op transitions
   if (from === to) {
     return;
   }
 
   // Define allowed transitions
-  const allowedTransitions: Record<PaymentStatus, PaymentStatus[]> = {
+  const allowedTransitions: Record<string, string[]> = {
     PLEDGED: ["PAID", "CANCELLED"],
     PAID: ["CANCELLED"],
     CANCELLED: [], // No transitions allowed from CANCELLED

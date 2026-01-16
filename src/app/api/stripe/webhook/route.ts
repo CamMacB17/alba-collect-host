@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import { assertValidTransition } from "@/lib/paymentTransitions";
+import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
         // Validate transition: only allow PLEDGED -> PAID
         try {
-          assertValidTransition(existingPayment.status, "PAID");
+          assertValidPaymentTransition(existingPayment.status, "PAID");
         } catch (err) {
           console.error("[webhook] Invalid payment status transition", {
             paymentId,
@@ -250,7 +250,7 @@ ${spotsDisplay}`,
 
         // Validate transition: only allow PLEDGED -> CANCELLED
         try {
-          assertValidTransition(existingPayment.status, "CANCELLED");
+          assertValidPaymentTransition(existingPayment.status, "CANCELLED");
         } catch (err) {
           console.error("[webhook] Invalid payment status transition for expired session", {
             paymentId,

@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
-import { assertValidTransition } from "@/lib/paymentTransitions";
+import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
   // Validate inputs are non-empty after trim
@@ -42,7 +42,7 @@ export async function cancelPledge(paymentId: string, adminToken: string): Promi
   }
 
   // Validate transition: only allow PLEDGED -> CANCELLED
-  assertValidTransition(payment.status, "CANCELLED");
+  assertValidPaymentTransition(payment.status, "CANCELLED");
 
   // Update that Payment status to CANCELLED
   await prisma.payment.update({
@@ -88,7 +88,7 @@ export async function markPaid(paymentId: string, adminToken: string): Promise<v
   }
 
   // Validate transition: only allow PLEDGED -> PAID
-  assertValidTransition(payment.status, "PAID");
+  assertValidPaymentTransition(payment.status, "PAID");
 
   // Prepare update data
   const updateData: { status: "PAID"; paidAt?: Date } = {
@@ -563,7 +563,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
         }
 
         // Validate transition: only allow PAID -> CANCELLED
-        assertValidTransition(currentPayment.status, "CANCELLED");
+        assertValidPaymentTransition(currentPayment.status, "CANCELLED");
 
         // Hard fail if already refunded
         if (currentPayment.refundedAt !== null || currentPayment.stripeRefundId !== null) {

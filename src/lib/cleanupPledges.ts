@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { assertValidTransition } from "@/lib/paymentTransitions";
+import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 
 export async function cleanupPledges(): Promise<number> {
   const cutoff = new Date(Date.now() - 30 * 60 * 1000);
@@ -20,7 +20,7 @@ export async function cleanupPledges(): Promise<number> {
   for (const payment of oldPledges) {
     try {
       // Validate transition: only allow PLEDGED -> CANCELLED
-      assertValidTransition(payment.status, "CANCELLED");
+      assertValidPaymentTransition(payment.status, "CANCELLED");
 
       await prisma.payment.update({
         where: { id: payment.id },
