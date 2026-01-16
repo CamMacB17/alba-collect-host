@@ -44,24 +44,24 @@ export default function Home() {
           </div>
 
           {/* Feature list - centered */}
-          <div className="mb-6">
-            <ul className="space-y-2 text-sm sm:text-base mx-auto inline-block" style={{ color: "#FFFFE0" }}>
+          <div className="mb-6 flex justify-center">
+            <ul className="space-y-2 text-sm sm:text-base text-center" style={{ color: "#FFFFE0" }}>
               <li className="flex items-center justify-center gap-2">
-                <span className="font-semibold" style={{ color: "#FBB924" }}>✓</span>
+                <span className="font-semibold flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
                 <span>Pay to join via Stripe</span>
               </li>
               <li className="flex items-center justify-center gap-2">
-                <span className="font-semibold" style={{ color: "#FBB924" }}>✓</span>
+                <span className="font-semibold flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
                 <span>Automatic attendance list with CSV export</span>
               </li>
               <li className="flex items-center justify-center gap-2">
-                <span className="font-semibold" style={{ color: "#FBB924" }}>✓</span>
+                <span className="font-semibold flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
                 <span>Refund controls and audit log</span>
               </li>
             </ul>
           </div>
 
-          <div className="mb-5 text-xs sm:text-sm space-y-0.5" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <div className="mb-5 text-xs sm:text-sm space-y-0.5 text-center" style={{ color: "#FFFFE0", opacity: 0.7 }}>
             <p>No accounts needed for guests.</p>
             <p>You are marked paid only after Stripe confirms payment.</p>
           </div>

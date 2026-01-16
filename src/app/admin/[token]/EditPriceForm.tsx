@@ -88,28 +88,36 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
     <form onSubmit={handleSubmit}>
       <div className="space-y-1">
         <div className="flex gap-2 items-start">
-          <input
-            type="text"
-            id="price"
-            name="price"
-            defaultValue={currentPricePounds ? `£${currentPricePounds}` : ""}
-            placeholder="£0.00"
-            disabled={isPriceLocked}
-            className="px-2.5 py-2 rounded w-28 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#FFFFE0"
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#F78222";
-              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#404043";
-              e.target.style.boxShadow = "none";
-            }}
-          />
+          <div className="relative flex-1">
+            <span 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none"
+              style={{ color: "#FFFFE0", opacity: 0.7 }}
+            >
+              £
+            </span>
+            <input
+              type="text"
+              id="price"
+              name="price"
+              defaultValue={currentPricePounds ?? ""}
+              placeholder="0.00"
+              disabled={isPriceLocked}
+              className="w-full pl-8 pr-2.5 py-2 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              style={{
+                background: "#2C2C2F",
+                border: "1px solid #404043",
+                color: "#FFFFE0"
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#F78222";
+                e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#404043";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+          </div>
           <button
             type="submit"
             disabled={isPriceLocked}

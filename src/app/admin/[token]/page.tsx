@@ -237,16 +237,19 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                   <EditTitleForm eventId={event.id} currentTitle={event.title} token={token} />
                 </div>
 
-                {/* Price with inline Save */}
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</label>
-                  <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
-                </div>
-                
-                {/* Max Spots with inline Save */}
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Max spots</label>
-                  <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
+                {/* Price and Max Spots - Side by side on desktop */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Price with inline Save */}
+                  <div>
+                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</label>
+                    <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
+                  </div>
+                  
+                  {/* Max Spots with inline Save */}
+                  <div>
+                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Max spots</label>
+                    <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
+                  </div>
                 </div>
               </div>
             </div>
