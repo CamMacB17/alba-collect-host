@@ -10,7 +10,7 @@ export default function Home() {
           </h1>
           
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-            Create an event, share a link, get paid via Stripe. No accounts, no hassle.
+            Create your golf event, share a link, guests pay via Stripe, and attendance is tracked automatically.
           </p>
 
           <div className="mb-12 text-left max-w-xl mx-auto">
@@ -21,13 +21,18 @@ export default function Home() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 font-bold">✓</span>
-                <span>Automatic attendance tracking</span>
+                <span>Automatic attendance list with CSV export</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 font-bold">✓</span>
-                <span>Refunds and admin controls built in</span>
+                <span>Refund controls and audit log</span>
               </li>
             </ul>
+          </div>
+
+          <div className="mb-8 text-sm text-gray-600 space-y-1">
+            <p>No accounts needed for guests.</p>
+            <p>You are marked paid only after Stripe confirms payment.</p>
           </div>
 
           <Link
