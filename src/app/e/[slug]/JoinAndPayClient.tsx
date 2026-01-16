@@ -52,12 +52,12 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-6" style={{ color: "#FFFFE0" }}>
+      <h2 className="text-lg font-semibold mb-6" style={{ color: "#FFFFE0" }}>
         Join this event
       </h2>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="name" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+          <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
             Name *
           </label>
           <input
@@ -67,9 +67,9 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
             onChange={(e) => setName(e.target.value)}
             required
             disabled={loading || isDisabled}
-            className="w-full px-4 py-3 rounded-lg transition-all"
+            className="w-full px-4 py-2.5 rounded-lg transition-all"
             style={{
-              background: isDisabled ? "#2C2C2F" : "#2C2C2F",
+              background: "#2C2C2F",
               border: "1px solid #404043",
               color: "#FFFFE0",
               opacity: isDisabled ? 0.5 : 1,
@@ -88,7 +88,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+          <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
             Email *
           </label>
           <input
@@ -98,9 +98,9 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading || isDisabled}
-            className="w-full px-4 py-3 rounded-lg transition-all"
+            className="w-full px-4 py-2.5 rounded-lg transition-all"
             style={{
-              background: isDisabled ? "#2C2C2F" : "#2C2C2F",
+              background: "#2C2C2F",
               border: "1px solid #404043",
               color: "#FFFFE0",
               opacity: isDisabled ? 0.5 : 1,
@@ -122,7 +122,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-6 rounded-lg font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background: loading ? "#404043" : "#F78222",
               color: "white"
@@ -147,7 +147,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
         )}
         {isDisabled && (
           <div className="p-4 rounded-lg text-center" style={{ background: "rgba(226, 54, 66, 0.15)", border: "1px solid #E23642" }}>
-            <p style={{ color: "#E23642" }}>
+            <p className="text-sm" style={{ color: "#E23642" }}>
               {isClosed ? "This event is closed." : "This event is full."}
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
       </form>
       {message && (
         <div className="mt-4 p-4 rounded-lg" style={{ background: "rgba(226, 54, 66, 0.15)", border: "1px solid #E23642" }}>
-          <p style={{ color: "#E23642" }}>{message.text}</p>
+          <p className="text-sm" style={{ color: "#E23642" }}>{message.text}</p>
         </div>
       )}
     </div>

@@ -22,8 +22,10 @@ export default async function EventPage({
 
   if (!result || !result.event) {
     return (
-      <main className="min-h-screen p-8">
-        <p style={{ color: "#FFFFE0" }}>Event not found</p>
+      <main className="min-h-screen p-8" style={{ background: "#2C2C2F" }}>
+        <div className="max-w-5xl mx-auto">
+          <p style={{ color: "#FFFFE0" }}>Event not found</p>
+        </div>
       </main>
     );
   }
@@ -62,52 +64,83 @@ export default async function EventPage({
   }
 
   return (
-    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#2C2C2F" }}>
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Event Header Card */}
-        <div className="card mb-8">
-          <h1 className="text-3xl font-bold mb-6" style={{ color: "#FFFFE0" }}>
+        <div className="card">
+          <h1 className="text-3xl font-semibold mb-6" style={{ color: "#FFFFE0" }}>
             {event.title}
           </h1>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</span>
-              <p className="text-2xl font-semibold mt-1" style={{ color: "#FBB924" }}>
+              <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>Price per person</div>
+              <div className="text-2xl font-semibold" style={{ color: "#FBB924" }}>
                 {event.price !== null ? formatPrice(event.price) : "Free"}
-              </p>
+              </div>
             </div>
 
             {event.maxSpots !== null ? (
               <div>
-                <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</span>
-                <p className="text-xl font-semibold mt-1" style={{ color: "#FFFFE0" }}>
+                <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>Spots</div>
+                <div className="text-2xl font-semibold" style={{ color: "#FFFFE0" }}>
                   {spotsLeft} of {event.maxSpots} left
-                </p>
+                </div>
               </div>
             ) : (
               <div>
-                <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</span>
-                <p className="text-xl font-semibold mt-1" style={{ color: "#FFFFE0" }}>
+                <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>Spots</div>
+                <div className="text-2xl font-semibold" style={{ color: "#FFFFE0" }}>
                   Unlimited
-                </p>
+                </div>
               </div>
             )}
+
+            <div>
+              <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</div>
+              <div>
+                {isClosed ? (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium" style={{
+                    background: "rgba(226, 54, 66, 0.15)",
+                    color: "#E23642",
+                    border: "1px solid rgba(226, 54, 66, 0.3)"
+                  }}>
+                    Closed
+                  </span>
+                ) : isFull ? (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium" style={{
+                    background: "rgba(226, 54, 66, 0.15)",
+                    color: "#E23642",
+                    border: "1px solid rgba(226, 54, 66, 0.3)"
+                  }}>
+                    Full
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium" style={{
+                    background: "rgba(251, 185, 36, 0.15)",
+                    color: "#FBB924",
+                    border: "1px solid rgba(251, 185, 36, 0.3)"
+                  }}>
+                    Open
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Status Messages */}
         {statusMessage && (
           <div
-            className="mb-6 p-4 rounded-lg border"
+            className="p-4 rounded-lg border"
             style={{
               background: statusMessage.type === "success" 
-                ? "rgba(251, 185, 36, 0.15)" 
+                ? "rgba(16, 185, 129, 0.15)" 
                 : statusMessage.type === "error"
                 ? "rgba(226, 54, 66, 0.15)"
                 : "rgba(247, 130, 34, 0.15)",
               borderColor: statusMessage.type === "success"
-                ? "#FBB924"
+                ? "#10b981"
                 : statusMessage.type === "error"
                 ? "#E23642"
                 : "#F78222"
@@ -115,23 +148,23 @@ export default async function EventPage({
           >
             {statusMessage.type === "success" ? (
               <>
-                <h2 className="text-xl font-semibold mb-2" style={{ color: "#FBB924" }}>
+                <h2 className="text-lg font-semibold mb-2" style={{ color: "#10b981" }}>
                   {statusMessage.text}
                 </h2>
-                <p className="mb-2" style={{ color: "#FFFFE0" }}>
+                <p className="mb-2 text-sm" style={{ color: "#FFFFE0" }}>
                   Thanks for your payment. You're confirmed for this event.
                 </p>
                 {email && (
-                  <p className="text-sm mt-2" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+                  <p className="text-xs mt-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
                     Paid as: {email}
                   </p>
                 )}
-                <p className="text-xs mt-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                <p className="text-xs mt-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>
                   Stripe will email your receipt.
                 </p>
               </>
             ) : (
-              <p style={{ 
+              <p className="text-sm" style={{ 
                 color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
               }}>
                 {statusMessage.text}
@@ -141,9 +174,11 @@ export default async function EventPage({
         )}
 
         {/* Join Card */}
-        <div className="card">
-          <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
-        </div>
+        {!isClosed && !isFull && (
+          <div className="card">
+            <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
+          </div>
+        )}
       </div>
     </main>
   );

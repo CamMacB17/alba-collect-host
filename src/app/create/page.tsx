@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function CreatePage() {
   const [loading, setLoading] = useState(false);
@@ -12,6 +12,17 @@ export default function CreatePage() {
   const [totalCost, setTotalCost] = useState<string>("");
   const [copied, setCopied] = useState<string | null>(null);
   const priceInputRef = useRef<HTMLInputElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to success section when event is created
+  useEffect(() => {
+    if (result && successRef.current) {
+      setTimeout(() => {
+        successRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        successRef.current?.focus();
+      }, 100);
+    }
+  }, [result]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -115,17 +126,113 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#2C2C2F" }}>
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Success Section - RENDERED ABOVE FORM */}
+        {result && (
+          <div 
+            ref={successRef}
+            tabIndex={-1}
+            className="card"
+            style={{
+              background: "rgba(16, 185, 129, 0.1)",
+              border: "1px solid rgba(16, 185, 129, 0.3)"
+            }}
+          >
+            <div className="flex items-start gap-3 mb-6">
+              <div className="text-2xl">✓</div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold mb-1" style={{ color: "#10b981" }}>Event Created</h2>
+                <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+                  Your event is ready. Share these links with your guests.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>Event URL</label>
+                <div className="flex gap-2">
+                  <a
+                    href={result.eventUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-4 py-2.5 rounded-lg truncate transition-all"
+                    style={{
+                      background: "#2C2C2F",
+                      border: "1px solid #404043",
+                      color: "#F78222"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#F78222";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#404043";
+                    }}
+                  >
+                    {result.eventUrl}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(window.location.origin + result.eventUrl, "event")}
+                    className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                    style={{
+                      background: copied === "event" ? "#10b981" : "#363639",
+                      border: "1px solid #404043",
+                      color: copied === "event" ? "white" : "#FFFFE0"
+                    }}
+                  >
+                    {copied === "event" ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>Admin URL</label>
+                <div className="flex gap-2">
+                  <a
+                    href={result.adminUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-4 py-2.5 rounded-lg truncate transition-all"
+                    style={{
+                      background: "#2C2C2F",
+                      border: "1px solid #404043",
+                      color: "#F78222"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#F78222";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#404043";
+                    }}
+                  >
+                    {result.adminUrl}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(window.location.origin + result.adminUrl, "admin")}
+                    className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                    style={{
+                      background: copied === "admin" ? "#10b981" : "#363639",
+                      border: "1px solid #404043",
+                      color: copied === "admin" ? "white" : "#FFFFE0"
+                    }}
+                  >
+                    {copied === "admin" ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form Section */}
         <div className="card">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: "#FFFFE0" }}>Create an Event</h1>
-          <p className="mb-8" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+          <h1 className="text-2xl font-semibold mb-2" style={{ color: "#FFFFE0" }}>Create an Event</h1>
+          <p className="mb-8 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
             Create your golf event, get a link, collect payments.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Event Title *
               </label>
               <input
@@ -133,7 +240,7 @@ export default function CreatePage() {
                 id="title"
                 name="title"
                 required
-                className="w-full px-4 py-3 rounded-lg"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
                 style={{
                   background: "#2C2C2F",
                   border: "1px solid #404043",
@@ -151,7 +258,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label htmlFor="price" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="price" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Price per person (£) *
               </label>
               <input
@@ -162,7 +269,7 @@ export default function CreatePage() {
                 step="0.01"
                 min="0"
                 required
-                className="w-full px-4 py-3 rounded-lg"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
                 style={{
                   background: "#2C2C2F",
                   border: "1px solid #404043",
@@ -177,13 +284,13 @@ export default function CreatePage() {
                   e.target.style.boxShadow = "none";
                 }}
               />
-              <p className="mt-2 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+              <p className="mt-2 text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
                 Each person will pay this amount.
               </p>
             </div>
 
             <div>
-              <label htmlFor="maxSpots" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="maxSpots" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Max Spots *
               </label>
               <input
@@ -192,7 +299,7 @@ export default function CreatePage() {
                 name="maxSpots"
                 min="1"
                 required
-                className="w-full px-4 py-3 rounded-lg"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
                 style={{
                   background: "#2C2C2F",
                   border: "1px solid #404043",
@@ -210,7 +317,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label htmlFor="totalCost" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="totalCost" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Total cost (£) (optional)
               </label>
               <div className="flex gap-2">
@@ -222,7 +329,7 @@ export default function CreatePage() {
                   min="0"
                   value={totalCost}
                   onChange={(e) => setTotalCost(e.target.value)}
-                  className="flex-1 px-4 py-3 rounded-lg"
+                  className="flex-1 px-4 py-2.5 rounded-lg transition-all"
                   style={{
                     background: "#2C2C2F",
                     border: "1px solid #404043",
@@ -240,7 +347,7 @@ export default function CreatePage() {
                 <button
                   type="button"
                   onClick={handleSplitTotal}
-                  className="px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
                   style={{
                     background: "#363639",
                     border: "1px solid #404043",
@@ -259,7 +366,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label htmlFor="organiserName" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="organiserName" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Organiser Name *
               </label>
               <input
@@ -267,7 +374,7 @@ export default function CreatePage() {
                 id="organiserName"
                 name="organiserName"
                 required
-                className="w-full px-4 py-3 rounded-lg"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
                 style={{
                   background: "#2C2C2F",
                   border: "1px solid #404043",
@@ -285,14 +392,14 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label htmlFor="organiserEmail" className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>
+              <label htmlFor="organiserEmail" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Organiser Email
               </label>
               <input
                 type="email"
                 id="organiserEmail"
                 name="organiserEmail"
-                className="w-full px-4 py-3 rounded-lg"
+                className="w-full px-4 py-2.5 rounded-lg transition-all"
                 style={{
                   background: "#2C2C2F",
                   border: "1px solid #404043",
@@ -312,7 +419,7 @@ export default function CreatePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-6 rounded-lg font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: loading ? "#404043" : "#F78222",
                 color: "white"
@@ -339,84 +446,6 @@ export default function CreatePage() {
           {error && (
             <div className="mt-6 p-4 rounded-lg" style={{ background: "rgba(226, 54, 66, 0.15)", border: "1px solid #E23642" }}>
               <p style={{ color: "#E23642" }}>{error}</p>
-            </div>
-          )}
-
-          {result && (
-            <div className="mt-8 p-6 rounded-lg" style={{ background: "#363639", border: "1px solid #404043" }}>
-              <h2 className="text-xl font-semibold mb-4" style={{ color: "#FBB924" }}>Event Created</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Event URL</label>
-                  <div className="flex gap-2">
-                    <a
-                      href={result.eventUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-3 rounded-lg truncate transition-all"
-                      style={{
-                        background: "#2C2C2F",
-                        border: "1px solid #404043",
-                        color: "#F78222"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "#F78222";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#404043";
-                      }}
-                    >
-                      {result.eventUrl}
-                    </a>
-                    <button
-                      onClick={() => copyToClipboard(window.location.origin + result.eventUrl, "event")}
-                      className="px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                      style={{
-                        background: copied === "event" ? "#F78222" : "#363639",
-                        border: "1px solid #404043",
-                        color: copied === "event" ? "white" : "#FFFFE0"
-                      }}
-                    >
-                      {copied === "event" ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Admin URL</label>
-                  <div className="flex gap-2">
-                    <a
-                      href={result.adminUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-3 rounded-lg truncate transition-all"
-                      style={{
-                        background: "#2C2C2F",
-                        border: "1px solid #404043",
-                        color: "#F78222"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "#F78222";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#404043";
-                      }}
-                    >
-                      {result.adminUrl}
-                    </a>
-                    <button
-                      onClick={() => copyToClipboard(window.location.origin + result.adminUrl, "admin")}
-                      className="px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                      style={{
-                        background: copied === "admin" ? "#F78222" : "#363639",
-                        border: "1px solid #404043",
-                        color: copied === "admin" ? "white" : "#FFFFE0"
-                      }}
-                    >
-                      {copied === "admin" ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>

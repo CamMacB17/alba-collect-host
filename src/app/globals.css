@@ -6,6 +6,7 @@
   --alba-accent: #F78222;
   --alba-yellow: #FBB924;
   --alba-red: #E23642;
+  --alba-green: #10b981;
   --alba-card-bg: #363639;
   --alba-border: #404043;
 }
@@ -16,6 +17,7 @@
   --color-alba-accent: var(--alba-accent);
   --color-alba-yellow: var(--alba-yellow);
   --color-alba-red: var(--alba-red);
+  --color-alba-green: var(--alba-green);
   --color-alba-card-bg: var(--alba-card-bg);
   --color-alba-border: var(--alba-border);
   --font-sans: var(--font-poppins);
@@ -72,6 +74,23 @@ input[type="number"]:focus {
   background: #e6731f;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(247, 130, 34, 0.3);
+}
+
+.btn-success {
+  background: var(--alba-green);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {

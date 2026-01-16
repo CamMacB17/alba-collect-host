@@ -118,18 +118,21 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
             disabled={isPriceLocked}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{
-              background: isPriceLocked ? "#404043" : "#363639",
-              border: "1px solid #404043",
-              color: "#FFFFE0"
+              background: isPriceLocked ? "#404043" : "#10b981",
+              color: "white"
             }}
             onMouseEnter={(e) => {
               if (!isPriceLocked) {
-                e.currentTarget.style.background = "#404043";
+                e.currentTarget.style.background = "#059669";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
               }
             }}
             onMouseLeave={(e) => {
               if (!isPriceLocked) {
-                e.currentTarget.style.background = "#363639";
+                e.currentTarget.style.background = "#10b981";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
               }
             }}
           >

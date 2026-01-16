@@ -46,15 +46,18 @@ export default function EditTitleForm({ eventId, currentTitle, token }: { eventI
           type="submit"
           className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
           style={{
-            background: "#363639",
-            border: "1px solid #404043",
-            color: "#FFFFE0"
+            background: "#10b981",
+            color: "white"
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#404043";
+            e.currentTarget.style.background = "#059669";
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#363639";
+            e.currentTarget.style.background = "#10b981";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "none";
           }}
         >
           Save
