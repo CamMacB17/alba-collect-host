@@ -43,8 +43,11 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
   if (!adminToken) {
     return (
-      <main className="min-h-screen p-8">
-        <p>Admin link not found</p>
+      <main className="min-h-screen p-8 max-w-4xl mx-auto">
+        <div className="card">
+          <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Admin link not found</h1>
+          <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The admin token you're using is invalid or has expired.</p>
+        </div>
       </main>
     );
   }
@@ -56,8 +59,11 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
   if (!event) {
     return (
-      <main className="min-h-screen p-8">
-        <p>Event not found</p>
+      <main className="min-h-screen p-8 max-w-4xl mx-auto">
+        <div className="card">
+          <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Event not found</h1>
+          <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The event associated with this admin link could not be found.</p>
+        </div>
       </main>
     );
   }
@@ -261,20 +267,10 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           <div className="pt-2" style={{ borderTop: "1px solid #404043" }}>
             <a
               href={`/admin/${token}/export`}
-              className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
               style={{
                 background: "#F78222",
                 color: "white"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#e6731f";
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(247, 130, 34, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#F78222";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
               }}
             >
               Download attendees CSV
@@ -336,8 +332,8 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                     style={{ borderBottom: "1px solid #404043" }}
                     className="hover:opacity-80 transition-opacity"
                   >
-                    <td className="py-3 px-3 text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name}</td>
-                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email}</td>
+                    <td className="py-3 px-3 text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</td>
+                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</td>
                     <td className="py-3 px-3">
                       <span
                         className="inline-block px-2 py-1 rounded text-xs font-medium"
@@ -362,7 +358,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                       )}
                     </td>
                     <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
-                      {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : formatDate(payment.createdAt)}
+                      {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
                     </td>
                     <td className="py-3 px-3 text-right">
                       {payment.status === "PLEDGED" && (
@@ -435,7 +431,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                       <span className="font-medium" style={{ color: "#FFFFE0" }}>{log.actionType}</span>
                       {summary && <span className="ml-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>— {summary}</span>}
                     </div>
-                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.6 }}>{formatDate(log.createdAt)}</span>
+                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.6 }}>{log.createdAt ? formatDate(log.createdAt) : "—"}</span>
                   </div>
                 </div>
               );
