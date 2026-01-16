@@ -241,7 +241,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Price with inline Save */}
                   <div>
-                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</label>
+                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person (£)</label>
                     <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
                   </div>
                   
