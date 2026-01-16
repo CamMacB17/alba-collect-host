@@ -226,12 +226,12 @@ export default function CreatePage() {
         {/* Form Section */}
         <div className="p-4 md:p-6 rounded-lg" style={{ background: "var(--alba-card-bg)", border: "1px solid var(--alba-border)", boxShadow: "0 1px 3px rgba(0, 0, 0, 0.2)" }}>
           <h1 className="text-xl font-semibold mb-1" style={{ color: "#FFFFE0" }}>Create an Event</h1>
-          <p className="mb-4 text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="mb-3 text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
             Create your golf event, get a link, collect payments.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-            {/* Row 1: Event Title (full width) */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Event Title */}
             <div>
               <label htmlFor="title" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
                 Event Title *
@@ -258,70 +258,70 @@ export default function CreatePage() {
               />
             </div>
 
-            {/* Row 2: Price per person + Max Spots (two columns on desktop) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <label htmlFor="price" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                  Price per person (£) *
-                </label>
-                <input
-                  ref={priceInputRef}
-                  type="number"
-                  id="price"
-                  name="price"
-                  step="0.01"
-                  min="0"
-                  required
-                  className="w-full px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              </div>
-              <div>
-                <label htmlFor="maxSpots" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                  Max Spots *
-                </label>
-                <input
-                  type="number"
-                  id="maxSpots"
-                  name="maxSpots"
-                  min="1"
-                  required
-                  className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              </div>
+            {/* Price per person */}
+            <div>
+              <label htmlFor="price" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Price per person (£) *
+              </label>
+              <input
+                ref={priceInputRef}
+                type="number"
+                id="price"
+                name="price"
+                step="0.01"
+                min="0"
+                required
+                className="w-full px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
             </div>
 
-            {/* Row 3: Total cost + Split total button (two columns on desktop) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                  Total cost (£) (optional)
-                </label>
+            {/* Max Spots */}
+            <div>
+              <label htmlFor="maxSpots" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Max Spots *
+              </label>
+              <input
+                type="number"
+                id="maxSpots"
+                name="maxSpots"
+                min="1"
+                required
+                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Total cost + Split total button */}
+            <div>
+              <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Total cost (£) (optional)
+              </label>
+              <div className="flex flex-col md:flex-row gap-2">
                 <input
                   type="number"
                   id="totalCost"
@@ -330,7 +330,7 @@ export default function CreatePage() {
                   min="0"
                   value={totalCost}
                   onChange={(e) => setTotalCost(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
+                  className="flex-1 px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
                   style={{
                     background: "#2C2C2F",
                     border: "1px solid #404043",
@@ -345,12 +345,10 @@ export default function CreatePage() {
                     e.target.style.boxShadow = "none";
                   }}
                 />
-              </div>
-              <div className="flex items-end">
                 <button
                   type="button"
                   onClick={handleSplitTotal}
-                  className="w-full px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
+                  className="px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all md:w-auto"
                   style={{
                     background: "#363639",
                     border: "1px solid #404043",
@@ -368,60 +366,60 @@ export default function CreatePage() {
               </div>
             </div>
 
-            {/* Row 4: Organiser Name + Organiser Email (two columns on desktop) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <label htmlFor="organiserName" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                  Organiser Name *
-                </label>
-                <input
-                  type="text"
-                  id="organiserName"
-                  name="organiserName"
-                  required
-                  className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              </div>
-              <div>
-                <label htmlFor="organiserEmail" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                  Organiser Email
-                </label>
-                <input
-                  type="email"
-                  id="organiserEmail"
-                  name="organiserEmail"
-                  className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              </div>
+            {/* Organiser Name */}
+            <div>
+              <label htmlFor="organiserName" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Organiser Name *
+              </label>
+              <input
+                type="text"
+                id="organiserName"
+                name="organiserName"
+                required
+                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
             </div>
 
-            {/* Row 5: Create Event button (full width) */}
+            {/* Organiser Email */}
+            <div>
+              <label htmlFor="organiserEmail" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+                Organiser Email
+              </label>
+              <input
+                type="email"
+                id="organiserEmail"
+                name="organiserEmail"
+                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
+                style={{
+                  background: "#2C2C2F",
+                  border: "1px solid #404043",
+                  color: "#FFFFE0"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#F78222";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#404043";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Create Event button */}
             <div>
               <button
                 type="submit"
