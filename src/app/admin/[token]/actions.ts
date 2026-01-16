@@ -462,13 +462,17 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
         throw new Error("Payment has already been refunded");
       }
 
+      // Must have Stripe payment intent ID to refund
       if (!payment.stripePaymentIntentId) {
-        throw new Error("Payment has no Stripe Payment Intent ID for refund");
+        throw new Error("Missing Stripe payment intent id; cannot refund.");
       }
+
+      // Extract to const for type narrowing
+      const paymentIntentId = payment.stripePaymentIntentId;
 
       // Call Stripe refund
       const stripe = getStripe();
-      const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+      const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
 
       // Update payment with refund metadata
       await tx.payment.update({
@@ -538,10 +542,14 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
   // Refund each payment
   for (const payment of paidPayments) {
     try {
+      // Must have Stripe payment intent ID to refund
       if (!payment.stripePaymentIntentId) {
         failed++;
         continue;
       }
+
+      // Extract to const for type narrowing
+      const paymentIntentId = payment.stripePaymentIntentId;
 
       // Use transaction for each refund to ensure atomicity
       await prisma.$transaction(async (tx) => {
@@ -563,7 +571,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
         }
 
         // Call Stripe refund
-        const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+        const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
 
         // Prepare update data
         const updateData: {
