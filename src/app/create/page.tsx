@@ -126,8 +126,8 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#2C2C2F" }}>
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
+      <div className="w-full max-w-5xl mx-auto space-y-6">
         {/* Success Section - RENDERED ABOVE FORM */}
         {result && (
           <div 
@@ -186,12 +186,12 @@ export default function CreatePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>Admin URL</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <a
                     href={result.adminUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-2.5 rounded-lg truncate transition-all"
+                    className="flex-1 min-w-0 px-4 py-2.5 rounded-lg truncate transition-all"
                     style={{
                       background: "#2C2C2F",
                       border: "1px solid #404043",
@@ -208,7 +208,7 @@ export default function CreatePage() {
                   </a>
                   <button
                     onClick={() => copyToClipboard(window.location.origin + result.adminUrl, "admin")}
-                    className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
                     style={{
                       background: copied === "admin" ? "#10b981" : "#363639",
                       border: "1px solid #404043",
@@ -259,31 +259,38 @@ export default function CreatePage() {
 
             <div>
               <label htmlFor="price" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                Price per person (£) *
+                Price per person *
               </label>
-              <input
-                ref={priceInputRef}
-                type="number"
-                id="price"
-                name="price"
-                step="0.01"
-                min="0"
-                required
-                className="w-full px-4 py-2.5 rounded-lg transition-all"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
-              />
+              <div className="relative">
+                <span 
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none z-10"
+                >
+                  £
+                </span>
+                <input
+                  ref={priceInputRef}
+                  type="number"
+                  id="price"
+                  name="price"
+                  step="0.01"
+                  min="0"
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
+                  style={{
+                    background: "#2C2C2F",
+                    border: "1px solid #404043",
+                    color: "#FFFFE0"
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#F78222";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#404043";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
               <p className="mt-2 text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
                 Each person will pay this amount.
               </p>
@@ -318,36 +325,43 @@ export default function CreatePage() {
 
             <div>
               <label htmlFor="totalCost" className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-                Total cost (£) (optional)
+                Total cost (optional)
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  id="totalCost"
-                  name="totalCost"
-                  step="0.01"
-                  min="0"
-                  value={totalCost}
-                  onChange={(e) => setTotalCost(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-lg transition-all"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <span 
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none z-10"
+                  >
+                    £
+                  </span>
+                  <input
+                    type="number"
+                    id="totalCost"
+                    name="totalCost"
+                    step="0.01"
+                    min="0"
+                    value={totalCost}
+                    onChange={(e) => setTotalCost(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg transition-all tabular-nums"
+                    style={{
+                      background: "#2C2C2F",
+                      border: "1px solid #404043",
+                      color: "#FFFFE0"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#F78222";
+                      e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#404043";
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleSplitTotal}
-                  className="px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
                   style={{
                     background: "#363639",
                     border: "1px solid #404043",

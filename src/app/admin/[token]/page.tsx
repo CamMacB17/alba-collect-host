@@ -179,8 +179,8 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   });
 
   return (
-    <main className="min-h-screen p-3 sm:p-4" style={{ background: "#2C2C2F" }}>
-      <div className="max-w-6xl mx-auto space-y-3">
+    <main className="min-h-screen p-3 sm:p-4 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
+      <div className="w-full max-w-6xl mx-auto space-y-3">
         {/* Header Section - Mobile: title full width, stats underneath */}
         <div className="card">
           <div className="mb-3">
