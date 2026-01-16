@@ -570,6 +570,12 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
           throw new Error("Payment has already been refunded");
         }
 
+        // Must have Stripe payment intent ID to refund
+        if (!currentPayment.stripePaymentIntentId) {
+          throw new Error("Missing Stripe payment intent id; cannot refund.");
+        }
+        const paymentIntentId = currentPayment.stripePaymentIntentId;
+
         // Call Stripe refund
         const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
 
