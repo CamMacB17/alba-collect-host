@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --alba-bg: #2C2C2F;
+  --alba-text: #FFFFE0;
+  --alba-accent: #F78222;
+  --alba-yellow: #FBB924;
+  --alba-red: #E23642;
+  --alba-card-bg: #363639;
+  --alba-border: #404043;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-alba-bg: var(--alba-bg);
+  --color-alba-text: var(--alba-text);
+  --color-alba-accent: var(--alba-accent);
+  --color-alba-yellow: var(--alba-yellow);
+  --color-alba-red: var(--alba-red);
+  --color-alba-card-bg: var(--alba-card-bg);
+  --color-alba-border: var(--alba-border);
+  --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--alba-bg);
+  color: var(--alba-text);
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Card utility */
+.card {
+  background: var(--alba-card-bg);
+  border: 1px solid var(--alba-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Input styles */
+input[type="text"],
+input[type="email"],
+input[type="number"] {
+  background: var(--alba-card-bg);
+  border: 1px solid var(--alba-border);
+  color: var(--alba-text);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--alba-accent);
+  box-shadow: 0 0 0 3px rgba(247, 130, 34, 0.1);
+}
+
+/* Button styles */
+.btn-primary {
+  background: var(--alba-accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: #e6731f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(247, 130, 34, 0.3);
+}
+
+.btn-secondary {
+  background: var(--alba-card-bg);
+  color: var(--alba-text);
+  border: 1px solid var(--alba-border);
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #404043;
+  border-color: #505053;
+}
+
+.btn-danger {
+  background: var(--alba-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c92e3a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(226, 54, 66, 0.3);
 }

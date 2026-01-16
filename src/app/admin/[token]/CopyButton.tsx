@@ -21,7 +21,22 @@ export default function CopyButton({ text, label = "Copy" }: { text: string; lab
   return (
     <button
       onClick={handleClick}
-      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+      className="px-3 py-2 text-sm rounded-lg font-medium transition-all whitespace-nowrap"
+      style={{
+        background: copied ? "#F78222" : "#363639",
+        border: "1px solid #404043",
+        color: copied ? "white" : "#FFFFE0"
+      }}
+      onMouseEnter={(e) => {
+        if (!copied) {
+          e.currentTarget.style.background = "#404043";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!copied) {
+          e.currentTarget.style.background = "#363639";
+        }
+      }}
     >
       {copied ? "Copied" : label}
     </button>

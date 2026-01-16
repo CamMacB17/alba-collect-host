@@ -23,7 +23,7 @@ export default async function EventPage({
   if (!result || !result.event) {
     return (
       <main className="min-h-screen p-8">
-        <p>Event not found</p>
+        <p style={{ color: "#FFFFE0" }}>Event not found</p>
       </main>
     );
   }
@@ -62,60 +62,89 @@ export default async function EventPage({
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">{event.title}</h1>
+    <main className="min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Event Header Card */}
+        <div className="card mb-8">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: "#FFFFE0" }}>
+            {event.title}
+          </h1>
 
-      <p className="mb-2">
-        <span className="font-medium">
-          {event.price !== null ? formatPrice(event.price) : "Free"}
-        </span>{" "}
-        per person
-      </p>
-
-      {event.maxSpots !== null ? (
-        <p className="mb-4">
-          <span className="font-medium">
-            {spotsLeft} of {event.maxSpots} spots left
-          </span>
-        </p>
-      ) : (
-        <p className="mb-4">
-          <span className="font-medium">Unlimited spots</span>
-        </p>
-      )}
-
-      {statusMessage && (
-        <div
-          className={`mb-6 p-4 rounded-md border ${
-            statusMessage.type === "success"
-              ? "bg-green-50 border-green-200"
-              : statusMessage.type === "error"
-              ? "bg-red-50 border-red-200"
-              : "bg-gray-50 border-gray-200"
-          }`}
-        >
-          {statusMessage.type === "success" ? (
-            <>
-              <h2 className="text-xl font-semibold text-green-800 mb-2">
-                {statusMessage.text}
-              </h2>
-              <p className="text-green-700 mb-2">
-                Thanks for your payment. You're confirmed for this event.
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</span>
+              <p className="text-2xl font-semibold mt-1" style={{ color: "#FBB924" }}>
+                {event.price !== null ? formatPrice(event.price) : "Free"}
               </p>
-              {email && (
-                <p className="text-sm text-green-600 mt-2">Paid as: {email}</p>
-              )}
-              <p className="text-xs text-green-600 mt-2">Stripe will email your receipt.</p>
-            </>
-          ) : (
-            <p className={statusMessage.type === "error" ? "text-red-700" : "text-gray-700"}>
-              {statusMessage.text}
-            </p>
-          )}
-        </div>
-      )}
+            </div>
 
-      <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
+            {event.maxSpots !== null ? (
+              <div>
+                <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</span>
+                <p className="text-xl font-semibold mt-1" style={{ color: "#FFFFE0" }}>
+                  {spotsLeft} of {event.maxSpots} left
+                </p>
+              </div>
+            ) : (
+              <div>
+                <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</span>
+                <p className="text-xl font-semibold mt-1" style={{ color: "#FFFFE0" }}>
+                  Unlimited
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status Messages */}
+        {statusMessage && (
+          <div
+            className="mb-6 p-4 rounded-lg border"
+            style={{
+              background: statusMessage.type === "success" 
+                ? "rgba(251, 185, 36, 0.15)" 
+                : statusMessage.type === "error"
+                ? "rgba(226, 54, 66, 0.15)"
+                : "rgba(247, 130, 34, 0.15)",
+              borderColor: statusMessage.type === "success"
+                ? "#FBB924"
+                : statusMessage.type === "error"
+                ? "#E23642"
+                : "#F78222"
+            }}
+          >
+            {statusMessage.type === "success" ? (
+              <>
+                <h2 className="text-xl font-semibold mb-2" style={{ color: "#FBB924" }}>
+                  {statusMessage.text}
+                </h2>
+                <p className="mb-2" style={{ color: "#FFFFE0" }}>
+                  Thanks for your payment. You're confirmed for this event.
+                </p>
+                {email && (
+                  <p className="text-sm mt-2" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+                    Paid as: {email}
+                  </p>
+                )}
+                <p className="text-xs mt-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                  Stripe will email your receipt.
+                </p>
+              </>
+            ) : (
+              <p style={{ 
+                color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
+              }}>
+                {statusMessage.text}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Join Card */}
+        <div className="card">
+          <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
+        </div>
+      </div>
     </main>
   );
 }

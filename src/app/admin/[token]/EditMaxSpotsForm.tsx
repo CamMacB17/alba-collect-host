@@ -25,12 +25,9 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4">
+    <form onSubmit={handleSubmit}>
       <div className="space-y-2">
         <div className="flex gap-2 items-center">
-          <label htmlFor="maxSpots" className="font-medium">
-            Max spots:
-          </label>
           <input
             type="number"
             id="maxSpots"
@@ -38,17 +35,41 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
             min="1"
             defaultValue={currentMaxSpots ?? ""}
             placeholder="Unlimited"
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+            className="px-3 py-2 rounded-lg w-32 transition-all"
+            style={{
+              background: "#2C2C2F",
+              border: "1px solid #404043",
+              color: "#FFFFE0"
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#F78222";
+              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#404043";
+              e.target.style.boxShadow = "none";
+            }}
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: "#363639",
+              border: "1px solid #404043",
+              color: "#FFFFE0"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#404043";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#363639";
+            }}
           >
-            Save max spots
+            Save
           </button>
         </div>
         {error && (
-          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-sm" style={{ color: "#E23642" }}>{error}</p>
         )}
       </div>
     </form>

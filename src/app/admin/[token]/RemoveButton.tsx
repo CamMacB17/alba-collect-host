@@ -20,7 +20,18 @@ export default function RemoveButton({ paymentId, token }: { paymentId: string; 
   return (
     <button
       onClick={handleRemove}
-      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+      className="px-3 py-1 text-sm rounded-lg transition-all"
+      style={{
+        background: "rgba(226, 54, 66, 0.15)",
+        border: "1px solid #E23642",
+        color: "#E23642"
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "rgba(226, 54, 66, 0.25)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "rgba(226, 54, 66, 0.15)";
+      }}
     >
       Remove
     </button>

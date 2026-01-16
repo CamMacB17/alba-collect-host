@@ -171,97 +171,111 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
       {/* Top Summary Card */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">{event.title}</h1>
+      <div className="card mb-8">
+        <h1 className="text-2xl font-bold mb-6" style={{ color: "#FFFFE0" }}>{event.title}</h1>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <div className="text-sm text-gray-600 mb-1">Status</div>
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Status</div>
             <div className="text-lg font-semibold">
-              <span className={isClosed ? "text-red-600" : "text-green-600"}>
+              <span style={{ color: isClosed ? "#E23642" : "#FBB924" }}>
                 {isClosed ? "Closed" : "Open"}
               </span>
             </div>
           </div>
           
           <div>
-            <div className="text-sm text-gray-600 mb-1">Price per person</div>
-            <div className="text-lg font-semibold">{priceDisplay}</div>
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</div>
+            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{priceDisplay}</div>
           </div>
           
           <div>
-            <div className="text-sm text-gray-600 mb-1">Spots</div>
-            <div className="text-lg font-semibold">
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</div>
+            <div className="text-lg font-semibold" style={{ color: "#FFFFE0" }}>
               {spotsTaken}
               {event.maxSpots !== null ? ` / ${event.maxSpots}` : " (unlimited)"}
             </div>
           </div>
           
           <div>
-            <div className="text-sm text-gray-600 mb-1">Revenue</div>
-            <div className="text-lg font-semibold text-green-700">
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Revenue</div>
+            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>
               £{(totalPaidRevenue / 100).toFixed(2)}
             </div>
             {totalRefundedRevenue > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
                 Refunded: £{(totalRefundedRevenue / 100).toFixed(2)}
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-3 gap-4 pt-4" style={{ borderTop: "1px solid #404043" }}>
           <div>
-            <div className="text-sm text-gray-600 mb-1">Paid</div>
-            <div className="text-lg font-semibold text-green-700">{paidCount}</div>
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Paid</div>
+            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{paidCount}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600 mb-1">Pledged</div>
-            <div className="text-lg font-semibold text-yellow-700">{pledgedCount}</div>
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Pledged</div>
+            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{pledgedCount}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600 mb-1">Cancelled</div>
-            <div className="text-lg font-semibold text-gray-700">{cancelledCount}</div>
+            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Cancelled</div>
+            <div className="text-lg font-semibold" style={{ color: "#FFFFE0", opacity: 0.7 }}>{cancelledCount}</div>
           </div>
         </div>
       </div>
 
       {/* Primary Actions Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Event Settings</h2>
+      <div className="card mb-8">
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Event Settings</h2>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Event Title</label>
+            <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Event Title</label>
             <EditTitleForm eventId={event.id} currentTitle={event.title} token={token} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price per person</label>
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Price per person</label>
               <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Max spots</label>
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Max spots</label>
               <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
             </div>
           </div>
 
-          <div className="flex items-center gap-4 pt-2 border-t border-gray-200">
+          <div className="flex items-center gap-4 pt-2" style={{ borderTop: "1px solid #404043" }}>
             <div>
-              <span className="text-sm font-medium text-gray-700">Event status: </span>
-              <span className={isClosed ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
+              <span className="text-sm font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>Event status: </span>
+              <span className="font-semibold" style={{ color: isClosed ? "#E23642" : "#FBB924" }}>
                 {isClosed ? "Closed" : "Open"}
               </span>
             </div>
             <CloseReopenButton eventId={event.id} token={token} isClosed={isClosed} />
           </div>
 
-          <div className="pt-2 border-t border-gray-200">
+          <div className="pt-2" style={{ borderTop: "1px solid #404043" }}>
             <a
               href={`/admin/${token}/export`}
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+              className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: "#F78222",
+                color: "white"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#e6731f";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(247, 130, 34, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#F78222";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
             >
               Download attendees CSV
             </a>
@@ -270,19 +284,27 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
       </div>
 
       {/* Links Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Event Links</h2>
+      <div className="card mb-8">
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Event Links</h2>
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 w-24">Public link:</span>
-            <code className="flex-1 px-3 py-2 bg-gray-50 rounded text-sm font-mono break-all border border-gray-200">
+            <span className="text-sm font-medium w-24" style={{ color: "#FFFFE0", opacity: 0.8 }}>Public link:</span>
+            <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
+              background: "#2C2C2F",
+              border: "1px solid #404043",
+              color: "#F78222"
+            }}>
               {publicUrl}
             </code>
             <CopyButton text={publicUrl} />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 w-24">Admin link:</span>
-            <code className="flex-1 px-3 py-2 bg-gray-50 rounded text-sm font-mono break-all border border-gray-200">
+            <span className="text-sm font-medium w-24" style={{ color: "#FFFFE0", opacity: 0.8 }}>Admin link:</span>
+            <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
+              background: "#2C2C2F",
+              border: "1px solid #404043",
+              color: "#F78222"
+            }}>
               {adminUrl}
             </code>
             <CopyButton text={adminUrl} />
@@ -291,44 +313,55 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
       </div>
 
       {/* Attendees Table */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Attendees</h2>
+      <div className="card mb-8">
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Attendees</h2>
         {sortedPayments.length === 0 ? (
-          <p className="text-gray-600">No one has joined yet</p>
+          <p style={{ color: "#FFFFE0", opacity: 0.7 }}>No one has joined yet</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Name</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Email</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Date</th>
-                  <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700">Actions</th>
+                <tr style={{ borderBottom: "1px solid #404043" }}>
+                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Name</th>
+                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Email</th>
+                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Status</th>
+                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Date</th>
+                  <th className="text-right py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedPayments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-3 text-sm font-medium">{payment.name}</td>
-                    <td className="py-3 px-3 text-sm text-gray-600">{payment.email}</td>
+                  <tr 
+                    key={payment.id} 
+                    style={{ borderBottom: "1px solid #404043" }}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <td className="py-3 px-3 text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name}</td>
+                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email}</td>
                     <td className="py-3 px-3">
                       <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                          payment.status === "PAID"
-                            ? "bg-green-100 text-green-800"
+                        className="inline-block px-2 py-1 rounded text-xs font-medium"
+                        style={{
+                          background: payment.status === "PAID" 
+                            ? "rgba(251, 185, 36, 0.2)" 
                             : payment.status === "PLEDGED"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                            ? "rgba(251, 185, 36, 0.15)"
+                            : "rgba(255, 255, 224, 0.1)",
+                          color: payment.status === "PAID"
+                            ? "#FBB924"
+                            : payment.status === "PLEDGED"
+                            ? "#FBB924"
+                            : "#FFFFE0",
+                          opacity: payment.status === "CANCELLED" ? 0.6 : 1
+                        }}
                       >
                         {payment.status}
                       </span>
                       {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
-                        <span className="ml-2 text-xs text-gray-500">Refunded</span>
+                        <span className="ml-2 text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>Refunded</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-sm text-gray-600">
+                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
                       {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : formatDate(payment.createdAt)}
                     </td>
                     <td className="py-3 px-3 text-right">
@@ -356,9 +389,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
       {/* Danger Zone */}
       {paidCount > 0 && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold text-red-900 mb-2">Danger Zone</h2>
-          <p className="text-sm text-red-700 mb-4">
+        <div className="mb-8 p-6 rounded-lg" style={{ 
+          background: "rgba(226, 54, 66, 0.15)", 
+          border: "2px solid #E23642" 
+        }}>
+          <h2 className="text-lg font-semibold mb-2" style={{ color: "#E23642" }}>Danger Zone</h2>
+          <p className="text-sm mb-4" style={{ color: "#E23642", opacity: 0.9 }}>
             This refunds everyone who has paid. It cannot be undone.
           </p>
           <RefundAllButton token={token} />
@@ -371,10 +407,10 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
       </div>
 
       {/* Admin Action Log */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Recent Actions</h2>
+      <div className="card">
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
         {actionLogs.length === 0 ? (
-          <p className="text-gray-600 text-sm">No actions logged yet</p>
+          <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>No actions logged yet</p>
         ) : (
           <div className="space-y-3">
             {actionLogs.map((log) => {
@@ -393,13 +429,13 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
               }
 
               return (
-                <div key={log.id} className="text-sm border-b border-gray-100 pb-2">
+                <div key={log.id} className="text-sm pb-2" style={{ borderBottom: "1px solid #404043" }}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="font-medium text-gray-900">{log.actionType}</span>
-                      {summary && <span className="text-gray-600 ml-2">— {summary}</span>}
+                      <span className="font-medium" style={{ color: "#FFFFE0" }}>{log.actionType}</span>
+                      {summary && <span className="ml-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>— {summary}</span>}
                     </div>
-                    <span className="text-gray-500 text-xs whitespace-nowrap ml-4">{formatDate(log.createdAt)}</span>
+                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.6 }}>{formatDate(log.createdAt)}</span>
                   </div>
                 </div>
               );

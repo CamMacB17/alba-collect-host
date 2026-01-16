@@ -61,18 +61,18 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
 
   if (isPriceLocked) {
     return (
-      <div className="mb-4">
-        <p className="text-sm text-gray-600">Price is locked after the first payment.</p>
+      <div>
+        <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>Price is locked after the first payment.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4">
+    <form onSubmit={handleSubmit}>
       <div className="space-y-2">
         <div className="flex gap-2 items-center">
-          <label htmlFor="price" className="font-medium">
-            Price per person (£):
+          <label htmlFor="price" className="font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+            £
           </label>
           <input
             type="text"
@@ -81,21 +81,49 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
             defaultValue={currentPricePounds ?? ""}
             placeholder="Free"
             disabled={isPriceLocked}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="px-3 py-2 rounded-lg w-32 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: "#2C2C2F",
+              border: "1px solid #404043",
+              color: "#FFFFE0"
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#F78222";
+              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#404043";
+              e.target.style.boxShadow = "none";
+            }}
           />
           <button
             type="submit"
             disabled={isPriceLocked}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: isPriceLocked ? "#404043" : "#363639",
+              border: "1px solid #404043",
+              color: "#FFFFE0"
+            }}
+            onMouseEnter={(e) => {
+              if (!isPriceLocked) {
+                e.currentTarget.style.background = "#404043";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isPriceLocked) {
+                e.currentTarget.style.background = "#363639";
+              }
+            }}
           >
-            Save price
+            Save
           </button>
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
           Changing price won't affect people who already joined.
         </p>
         {error && (
-          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-sm" style={{ color: "#E23642" }}>{error}</p>
         )}
       </div>
     </form>
