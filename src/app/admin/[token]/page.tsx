@@ -200,7 +200,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="text-center">
               <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Price</div>
-              <div className="text-sm sm:text-base font-semibold" style={{ color: "#FBB924" }}>{priceDisplay}</div>
+              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "#FBB924" }}>{priceDisplay}</div>
             </div>
             <div className="text-center">
               <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Spots</div>
@@ -211,7 +211,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
             </div>
             <div className="text-center">
               <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Revenue</div>
-              <div className="text-sm sm:text-base font-semibold" style={{ color: "#FBB924" }}>
+              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "#FBB924" }}>
                 £{(totalPaidRevenue / 100).toFixed(0)}
               </div>
             </div>
