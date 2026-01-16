@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import { sendPaymentReceipt, sendEmail } from "@/lib/email";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import Stripe from "stripe";
+import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -134,38 +135,49 @@ export async function POST(request: NextRequest) {
 
         console.log("[webhook] Payment updated to PAID", { paymentId, sessionId: session.id });
 
-        // Fetch payment with event details for email
+        // Fetch payment with event details for email (check receiptEmailSentAt)
         const payment = await prisma.payment.findUnique({
           where: { id: paymentId },
           include: { event: true },
         });
 
-        if (payment && payment.event) {
-          // Send confirmation email to participant
+        if (payment && payment.event && !payment.receiptEmailSentAt) {
+          // Build baseUrl for event link
+          const h = await headers();
+          const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+          let baseUrl: string;
+          if (envBase) {
+            baseUrl = envBase.replace(/\/$/, "");
+          } else {
+            const proto = h.get("x-forwarded-proto") ?? "http";
+            const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+            baseUrl = `${proto}://${host}`;
+          }
+
+          // Send payment receipt email (idempotent: only if receiptEmailSentAt is null)
           try {
-            const priceDisplay =
-              payment.amountPence === null || payment.amountPence === 0
-                ? "Free"
-                : `£${(payment.amountPence / 100).toFixed(2)}`;
-
-            const organiserLine = payment.event.organiserName
-              ? `\nOrganiser: ${payment.event.organiserName}`
-              : "";
-
-            await sendEmail({
+            await sendPaymentReceipt({
               to: payment.email,
-              subject: `You're in – ${payment.event.title}`,
-              body: `Hi ${payment.name},
+              event: {
+                title: payment.event.title,
+                slug: payment.event.slug,
+                organiserName: payment.event.organiserName,
+              },
+              payment: {
+                name: payment.name,
+                amountPence: payment.amountPence,
+              },
+              baseUrl,
+            });
 
-You're confirmed for: ${payment.event.title}
-
-Price paid: ${priceDisplay}${organiserLine}
-
-See you there!`,
+            // Mark email as sent
+            await prisma.payment.update({
+              where: { id: paymentId },
+              data: { receiptEmailSentAt: new Date() },
             });
           } catch (emailErr) {
             // Log email error but don't fail the webhook
-            console.error("[webhook] Failed to send confirmation email", {
+            console.error("[webhook] Failed to send payment receipt email", {
               paymentId,
               error: emailErr,
             });

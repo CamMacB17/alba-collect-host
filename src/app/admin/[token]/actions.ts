@@ -5,6 +5,8 @@ import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logAdminAction } from "@/lib/adminActionLog";
+import { sendRefundReceipt } from "@/lib/email";
+import { headers } from "next/headers";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
   // Validate inputs are non-empty after trim
@@ -508,6 +510,57 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
       });
     });
 
+    // Send refund email if not already sent (after transaction succeeds)
+    const updatedPayment = await prisma.payment.findUnique({
+      where: { id: trimmedPaymentId },
+      include: { event: true },
+    });
+
+    if (updatedPayment && updatedPayment.event && !updatedPayment.refundEmailSentAt) {
+      try {
+        // Build baseUrl
+        const h = await headers();
+        const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+        let baseUrl: string;
+        if (envBase) {
+          baseUrl = envBase.replace(/\/$/, "");
+        } else {
+          const proto = h.get("x-forwarded-proto") ?? "http";
+          const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+          baseUrl = `${proto}://${host}`;
+        }
+
+        await sendRefundReceipt({
+          to: updatedPayment.email,
+          event: {
+            title: updatedPayment.event.title,
+            slug: updatedPayment.event.slug,
+          },
+          payment: {
+            name: updatedPayment.name,
+            amountPence: updatedPayment.amountPence,
+          },
+          refund: {
+            id: updatedPayment.stripeRefundId!,
+            amount: updatedPayment.amountPenceCaptured || updatedPayment.amountPence,
+          },
+          baseUrl,
+        });
+
+        // Mark refund email as sent
+        await prisma.payment.update({
+          where: { id: trimmedPaymentId },
+          data: { refundEmailSentAt: new Date() },
+        });
+      } catch (emailErr) {
+        // Log email error but don't fail the refund
+        console.error("[refundPayment] Failed to send refund receipt email", {
+          paymentId: trimmedPaymentId,
+          error: emailErr,
+        });
+      }
+    }
+
     return { ok: true };
   } catch (err) {
     if (err instanceof Error) {
@@ -560,6 +613,18 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
   });
   skippedAlreadyRefunded = alreadyRefundedCount;
 
+  // Build baseUrl once for all emails
+  const h = await headers();
+  const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+  let baseUrl: string;
+  if (envBase) {
+    baseUrl = envBase.replace(/\/$/, "");
+  } else {
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+    baseUrl = `${proto}://${host}`;
+  }
+
   // Refund each payment
   for (const payment of paidPayments) {
     try {
@@ -571,6 +636,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
 
       // Extract to const for type narrowing
       const paymentIntentId = payment.stripePaymentIntentId;
+      let refundId: string | null = null;
 
       // Use transaction for each refund to ensure atomicity
       await prisma.$transaction(async (tx) => {
@@ -599,6 +665,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
 
         // Call Stripe refund
         const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
+        refundId = refund.id;
 
         // Prepare update data
         const updateData: {
@@ -624,6 +691,44 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
           data: updateData,
         });
       });
+
+      // Send refund email if not already sent (after transaction succeeds)
+      if (refundId) {
+        const updatedPayment = await prisma.payment.findUnique({
+          where: { id: payment.id },
+          include: { event: true },
+        });
+
+        if (updatedPayment && updatedPayment.event && !updatedPayment.refundEmailSentAt) {
+          try {
+            await sendRefundReceipt({
+              to: updatedPayment.email,
+              event: {
+                title: updatedPayment.event.title,
+                slug: updatedPayment.event.slug,
+              },
+              payment: {
+                name: updatedPayment.name,
+                amountPence: updatedPayment.amountPence,
+              },
+              refund: {
+                id: refundId,
+                amount: updatedPayment.amountPenceCaptured || updatedPayment.amountPence,
+              },
+              baseUrl,
+            });
+
+            // Mark refund email as sent
+            await prisma.payment.update({
+              where: { id: payment.id },
+              data: { refundEmailSentAt: new Date() },
+            });
+          } catch (emailErr) {
+            // Log email error but don't fail the refund
+            console.error(`[refundAllPaidPayments] Failed to send refund receipt email for payment ${payment.id}:`, emailErr);
+          }
+        }
+      }
 
       refunded++;
     } catch (err) {
