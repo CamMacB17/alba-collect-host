@@ -155,6 +155,15 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           </div>
         </div>
       </div>
+
+      <div className="mb-6">
+        <a
+          href={`/admin/${token}/export`}
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+        >
+          Download attendees CSV
+        </a>
+      </div>
       
       <div className="space-y-4 mb-6">
         <CleanupButton token={token} />
