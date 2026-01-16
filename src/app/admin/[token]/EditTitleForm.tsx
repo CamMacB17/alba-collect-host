@@ -21,13 +21,13 @@ export default function EditTitleForm({ eventId, currentTitle, token }: { eventI
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-3 items-start">
         <input
           type="text"
           name="title"
           defaultValue={currentTitle}
           required
-          className="flex-1 px-4 py-3 rounded-lg text-2xl font-bold transition-all"
+          className="flex-1 px-4 py-2.5 rounded-lg text-base font-medium transition-all"
           style={{
             background: "#2C2C2F",
             border: "1px solid #404043",
@@ -44,7 +44,7 @@ export default function EditTitleForm({ eventId, currentTitle, token }: { eventI
         />
         <button
           type="submit"
-          className="px-4 py-3 rounded-lg text-sm font-medium transition-all"
+          className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
           style={{
             background: "#363639",
             border: "1px solid #404043",

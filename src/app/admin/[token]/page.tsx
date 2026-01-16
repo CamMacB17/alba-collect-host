@@ -43,10 +43,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
   if (!adminToken) {
     return (
-      <main className="min-h-screen p-8 max-w-4xl mx-auto">
-        <div className="card">
-          <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Admin link not found</h1>
-          <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The admin token you're using is invalid or has expired.</p>
+      <main className="min-h-screen p-6 sm:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="card">
+            <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Admin link not found</h1>
+            <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The admin token you're using is invalid or has expired.</p>
+          </div>
         </div>
       </main>
     );
@@ -59,10 +61,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
   if (!event) {
     return (
-      <main className="min-h-screen p-8 max-w-4xl mx-auto">
-        <div className="card">
-          <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Event not found</h1>
-          <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The event associated with this admin link could not be found.</p>
+      <main className="min-h-screen p-6 sm:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="card">
+            <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Event not found</h1>
+            <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The event associated with this admin link could not be found.</p>
+          </div>
         </div>
       </main>
     );
@@ -175,269 +179,317 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   });
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
-      {/* Top Summary Card */}
-      <div className="card mb-8">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: "#FFFFE0" }}>{event.title}</h1>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Status</div>
-            <div className="text-lg font-semibold">
-              <span style={{ color: isClosed ? "#E23642" : "#FBB924" }}>
+    <main className="min-h-screen p-6 sm:p-8" style={{ background: "#2C2C2F" }}>
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="card">
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold mb-2" style={{ color: "#FFFFE0" }}>{event.title}</h1>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium"
+                style={{
+                  background: isClosed ? "rgba(226, 54, 66, 0.15)" : "rgba(251, 185, 36, 0.15)",
+                  color: isClosed ? "#E23642" : "#FBB924",
+                  border: `1px solid ${isClosed ? "#E23642" : "#FBB924"}`,
+                }}
+              >
                 {isClosed ? "Closed" : "Open"}
               </span>
             </div>
           </div>
           
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person</div>
-            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{priceDisplay}</div>
-          </div>
-          
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Spots</div>
-            <div className="text-lg font-semibold" style={{ color: "#FFFFE0" }}>
-              {spotsTaken}
-              {event.maxSpots !== null ? ` / ${event.maxSpots}` : " (unlimited)"}
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Revenue</div>
-            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>
-              £{(totalPaidRevenue / 100).toFixed(2)}
-            </div>
-            {totalRefundedRevenue > 0 && (
-              <div className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
-                Refunded: £{(totalRefundedRevenue / 100).toFixed(2)}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-4" style={{ borderTop: "1px solid #404043" }}>
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Paid</div>
-            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{paidCount}</div>
-          </div>
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Pledged</div>
-            <div className="text-lg font-semibold" style={{ color: "#FBB924" }}>{pledgedCount}</div>
-          </div>
-          <div>
-            <div className="text-sm mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Cancelled</div>
-            <div className="text-lg font-semibold" style={{ color: "#FFFFE0", opacity: 0.7 }}>{cancelledCount}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Primary Actions Section */}
-      <div className="card mb-8">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Event Settings</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Event Title</label>
-            <EditTitleForm eventId={event.id} currentTitle={event.title} token={token} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Price per person</label>
-              <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
+          {/* Key Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-lg" style={{ background: "#363639" }}>
+              <div className="text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Price</div>
+              <div className="text-xl font-semibold" style={{ color: "#FBB924" }}>{priceDisplay}</div>
             </div>
             
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Max spots</label>
-              <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
+            <div className="p-4 rounded-lg" style={{ background: "#363639" }}>
+              <div className="text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Spots</div>
+              <div className="text-xl font-semibold" style={{ color: "#FFFFE0" }}>
+                {spotsTaken}
+                {event.maxSpots !== null ? ` / ${event.maxSpots}` : " ∞"}
+              </div>
+            </div>
+            
+            <div className="p-4 rounded-lg" style={{ background: "#363639" }}>
+              <div className="text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Revenue</div>
+              <div className="text-xl font-semibold" style={{ color: "#FBB924" }}>
+                £{(totalPaidRevenue / 100).toFixed(2)}
+              </div>
+              {totalRefundedRevenue > 0 && (
+                <div className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.5 }}>
+                  Refunded: £{(totalRefundedRevenue / 100).toFixed(2)}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 rounded-lg" style={{ background: "#363639" }}>
+              <div className="text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Attendees</div>
+              <div className="text-xl font-semibold" style={{ color: "#FFFFE0" }}>{totalPayments}</div>
+              <div className="text-xs mt-1 space-x-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                <span>{paidCount} paid</span>
+                <span>·</span>
+                <span>{pledgedCount} pledged</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-4 pt-2" style={{ borderTop: "1px solid #404043" }}>
+        {/* Event Settings */}
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-6" style={{ color: "#FFFFE0" }}>Event Settings</h2>
+          
+          <div className="space-y-6">
+            {/* Title */}
             <div>
-              <span className="text-sm font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>Event status: </span>
-              <span className="font-semibold" style={{ color: isClosed ? "#E23642" : "#FBB924" }}>
-                {isClosed ? "Closed" : "Open"}
-              </span>
+              <label className="block text-sm font-medium mb-3" style={{ color: "#FFFFE0", opacity: 0.9 }}>Event Title</label>
+              <EditTitleForm eventId={event.id} currentTitle={event.title} token={token} />
             </div>
-            <CloseReopenButton eventId={event.id} token={token} isClosed={isClosed} />
-          </div>
 
-          <div className="pt-2" style={{ borderTop: "1px solid #404043" }}>
-            <a
-              href={`/admin/${token}/export`}
-              className="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
-              style={{
-                background: "#F78222",
-                color: "white"
-              }}
-            >
-              Download attendees CSV
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Links Section */}
-      <div className="card mb-8">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Event Links</h2>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium w-24" style={{ color: "#FFFFE0", opacity: 0.8 }}>Public link:</span>
-            <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#F78222"
-            }}>
-              {publicUrl}
-            </code>
-            <CopyButton text={publicUrl} />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium w-24" style={{ color: "#FFFFE0", opacity: 0.8 }}>Admin link:</span>
-            <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#F78222"
-            }}>
-              {adminUrl}
-            </code>
-            <CopyButton text={adminUrl} />
-          </div>
-        </div>
-      </div>
-
-      {/* Attendees Table */}
-      <div className="card mb-8">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Attendees</h2>
-        {sortedPayments.length === 0 ? (
-          <p style={{ color: "#FFFFE0", opacity: 0.7 }}>No one has joined yet</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: "1px solid #404043" }}>
-                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Name</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Email</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Status</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Date</th>
-                  <th className="text-right py-2 px-3 text-sm font-semibold" style={{ color: "#FFFFE0", opacity: 0.8 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedPayments.map((payment) => (
-                  <tr 
-                    key={payment.id} 
-                    style={{ borderBottom: "1px solid #404043" }}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <td className="py-3 px-3 text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</td>
-                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</td>
-                    <td className="py-3 px-3">
-                      <span
-                        className="inline-block px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          background: payment.status === "PAID" 
-                            ? "rgba(251, 185, 36, 0.2)" 
-                            : payment.status === "PLEDGED"
-                            ? "rgba(251, 185, 36, 0.15)"
-                            : "rgba(255, 255, 224, 0.1)",
-                          color: payment.status === "PAID"
-                            ? "#FBB924"
-                            : payment.status === "PLEDGED"
-                            ? "#FBB924"
-                            : "#FFFFE0",
-                          opacity: payment.status === "CANCELLED" ? 0.6 : 1
-                        }}
-                      >
-                        {payment.status}
-                      </span>
-                      {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
-                        <span className="ml-2 text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>Refunded</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
-                      {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      {payment.status === "PLEDGED" && (
-                        <div className="flex items-center justify-end gap-2">
-                          <MarkPaidButton paymentId={payment.id} token={token} />
-                          <RemoveButton paymentId={payment.id} token={token} />
-                        </div>
-                      )}
-                      {payment.status === "PAID" && (
-                        <RefundButton 
-                          paymentId={payment.id} 
-                          token={token} 
-                          isAlreadyRefunded={payment.refundedAt !== null || payment.stripeRefundId !== null}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Danger Zone */}
-      {paidCount > 0 && (
-        <div className="mb-8 p-6 rounded-lg" style={{ 
-          background: "rgba(226, 54, 66, 0.15)", 
-          border: "2px solid #E23642" 
-        }}>
-          <h2 className="text-lg font-semibold mb-2" style={{ color: "#E23642" }}>Danger Zone</h2>
-          <p className="text-sm mb-4" style={{ color: "#E23642", opacity: 0.9 }}>
-            This refunds everyone who has paid. It cannot be undone.
-          </p>
-          <RefundAllButton token={token} />
-        </div>
-      )}
-
-      {/* Cleanup Button */}
-      <div className="mb-8">
-        <CleanupButton token={token} />
-      </div>
-
-      {/* Admin Action Log */}
-      <div className="card">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
-        {actionLogs.length === 0 ? (
-          <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>No actions logged yet</p>
-        ) : (
-          <div className="space-y-3">
-            {actionLogs.map((log) => {
-              const metadata = log.metadataJson as Record<string, unknown>;
-              let summary = "";
+            {/* Price and Max Spots */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-3" style={{ color: "#FFFFE0", opacity: 0.9 }}>Price per person</label>
+                <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
+              </div>
               
-              if (log.actionType === "REFUND_ALL") {
-                const refunded = metadata.refunded as number | undefined;
-                const attempted = metadata.attempted as number | undefined;
-                const failed = metadata.failed as number | undefined;
-                summary = `Refunded ${refunded || 0} of ${attempted || 0} payments${failed && failed > 0 ? `, ${failed} failed` : ""}`;
-              } else if (log.actionType === "EVENT_CLOSE") {
-                summary = "Event closed";
-              } else if (log.actionType === "EVENT_REOPEN") {
-                summary = "Event reopened";
-              }
+              <div>
+                <label className="block text-sm font-medium mb-3" style={{ color: "#FFFFE0", opacity: 0.9 }}>Max spots</label>
+                <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
+              </div>
+            </div>
 
-              return (
-                <div key={log.id} className="text-sm pb-2" style={{ borderBottom: "1px solid #404043" }}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="font-medium" style={{ color: "#FFFFE0" }}>{log.actionType}</span>
-                      {summary && <span className="ml-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>— {summary}</span>}
-                    </div>
-                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.6 }}>{log.createdAt ? formatDate(log.createdAt) : "—"}</span>
+            {/* Event Status */}
+            <div className="pt-6" style={{ borderTop: "1px solid #404043" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.9 }}>Event Status</div>
+                  <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                    {isClosed ? "Event is closed. Guests cannot join." : "Event is open. Guests can join and pay."}
                   </div>
                 </div>
-              );
-            })}
+                <CloseReopenButton eventId={event.id} token={token} isClosed={isClosed} />
+              </div>
+            </div>
+
+            {/* CSV Export */}
+            <div className="pt-6" style={{ borderTop: "1px solid #404043" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.9 }}>Export Attendees</div>
+                  <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                    Download a CSV file with all attendee details
+                  </div>
+                </div>
+                <a
+                  href={`/admin/${token}/export`}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
+                  style={{
+                    background: "#F78222",
+                    color: "white"
+                  }}
+                >
+                  Download CSV
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Event Links */}
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Event Links</h2>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-28 flex-shrink-0" style={{ color: "#FFFFE0", opacity: 0.7 }}>Public link</span>
+              <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
+                background: "#2C2C2F",
+                border: "1px solid #404043",
+                color: "#F78222"
+              }}>
+                {publicUrl}
+              </code>
+              <CopyButton text={publicUrl} />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-28 flex-shrink-0" style={{ color: "#FFFFE0", opacity: 0.7 }}>Admin link</span>
+              <code className="flex-1 px-3 py-2 rounded text-sm font-mono break-all" style={{
+                background: "#2C2C2F",
+                border: "1px solid #404043",
+                color: "#F78222"
+              }}>
+                {adminUrl}
+              </code>
+              <CopyButton text={adminUrl} />
+            </div>
+          </div>
+        </div>
+
+        {/* Attendees Table */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold" style={{ color: "#FFFFE0" }}>Attendees</h2>
+            {sortedPayments.length > 0 && (
+              <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                {sortedPayments.length} {sortedPayments.length === 1 ? "person" : "people"}
+              </span>
+            )}
+          </div>
+          {sortedPayments.length === 0 ? (
+            <div className="py-12 text-center">
+              <p style={{ color: "#FFFFE0", opacity: 0.6 }}>No one has joined yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #404043" }}>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Name</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Email</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Date</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedPayments.map((payment) => (
+                    <tr 
+                      key={payment.id} 
+                      style={{ borderBottom: "1px solid #404043" }}
+                      className="hover:opacity-90 transition-opacity"
+                    >
+                      <td className="py-4 px-4">
+                        <div className="text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                            style={{
+                              background: payment.status === "PAID" 
+                                ? "rgba(251, 185, 36, 0.2)" 
+                                : payment.status === "PLEDGED"
+                                ? "rgba(251, 185, 36, 0.15)"
+                                : "rgba(255, 255, 224, 0.1)",
+                              color: payment.status === "PAID"
+                                ? "#FBB924"
+                                : payment.status === "PLEDGED"
+                                ? "#FBB924"
+                                : "#FFFFE0",
+                              opacity: payment.status === "CANCELLED" ? 0.7 : 1
+                            }}
+                          >
+                            {payment.status}
+                          </span>
+                          {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
+                            <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>Refunded</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                          {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          {payment.status === "PLEDGED" && (
+                            <>
+                              <MarkPaidButton paymentId={payment.id} token={token} />
+                              <RemoveButton paymentId={payment.id} token={token} />
+                            </>
+                          )}
+                          {payment.status === "PAID" && (
+                            <RefundButton 
+                              paymentId={payment.id} 
+                              token={token} 
+                              isAlreadyRefunded={payment.refundedAt !== null || payment.stripeRefundId !== null}
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Danger Zone */}
+        {paidCount > 0 && (
+          <div className="card" style={{ 
+            background: "rgba(226, 54, 66, 0.08)", 
+            border: "1px solid rgba(226, 54, 66, 0.3)" 
+          }}>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2" style={{ color: "#E23642" }}>Danger Zone</h2>
+              <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                These actions cannot be undone. Use with caution.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium mb-2" style={{ color: "#E23642" }}>Refund All Paid Payments</div>
+                <div className="text-xs mb-3" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                  This will refund everyone who has paid. All payments will be marked as cancelled.
+                </div>
+                <RefundAllButton token={token} />
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Cleanup */}
+        <div className="mb-6">
+          <CleanupButton token={token} />
+        </div>
+
+        {/* Recent Actions */}
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
+          {actionLogs.length === 0 ? (
+            <p className="text-sm py-4" style={{ color: "#FFFFE0", opacity: 0.6 }}>No actions logged yet</p>
+          ) : (
+            <div className="space-y-2">
+              {actionLogs.map((log) => {
+                const metadata = log.metadataJson as Record<string, unknown>;
+                let summary = "";
+                
+                if (log.actionType === "REFUND_ALL") {
+                  const refunded = metadata.refunded as number | undefined;
+                  const attempted = metadata.attempted as number | undefined;
+                  const failed = metadata.failed as number | undefined;
+                  summary = `Refunded ${refunded || 0} of ${attempted || 0} payments${failed && failed > 0 ? `, ${failed} failed` : ""}`;
+                } else if (log.actionType === "EVENT_CLOSE") {
+                  summary = "Event closed";
+                } else if (log.actionType === "EVENT_REOPEN") {
+                  summary = "Event reopened";
+                }
+
+                return (
+                  <div key={log.id} className="flex items-start justify-between py-2" style={{ borderBottom: "1px solid #404043" }}>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium" style={{ color: "#FFFFE0" }}>{log.actionType.replace(/_/g, " ")}</span>
+                      {summary && (
+                        <span className="text-sm ml-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>— {summary}</span>
+                      )}
+                    </div>
+                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.5 }}>
+                      {log.createdAt ? formatDate(log.createdAt) : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

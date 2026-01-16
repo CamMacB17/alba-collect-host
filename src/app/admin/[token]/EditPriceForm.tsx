@@ -61,8 +61,25 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
 
   if (isPriceLocked) {
     return (
-      <div>
-        <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.7 }}>Price is locked after the first payment.</p>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
+            style={{
+              background: "rgba(226, 54, 66, 0.15)",
+              color: "#E23642",
+              border: "1px solid rgba(226, 54, 66, 0.3)"
+            }}
+          >
+            Locked
+          </span>
+          <span className="text-sm font-medium" style={{ color: "#FFFFE0" }}>
+            £{currentPricePounds || "0.00"}
+          </span>
+        </div>
+        <p className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+          Price cannot be changed after the first payment
+        </p>
       </div>
     );
   }
@@ -70,36 +87,36 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <div className="flex gap-2 items-center">
-          <label htmlFor="price" className="font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>
-            £
-          </label>
-          <input
-            type="text"
-            id="price"
-            name="price"
-            defaultValue={currentPricePounds ?? ""}
-            placeholder="Free"
-            disabled={isPriceLocked}
-            className="px-3 py-2 rounded-lg w-32 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#FFFFE0"
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#F78222";
-              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#404043";
-              e.target.style.boxShadow = "none";
-            }}
-          />
+        <div className="flex gap-3 items-start">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-sm font-medium" style={{ color: "#FFFFE0", opacity: 0.8 }}>£</span>
+            <input
+              type="text"
+              id="price"
+              name="price"
+              defaultValue={currentPricePounds ?? ""}
+              placeholder="0.00"
+              disabled={isPriceLocked}
+              className="px-3 py-2 rounded-lg w-32 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "#2C2C2F",
+                border: "1px solid #404043",
+                color: "#FFFFE0"
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#F78222";
+                e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#404043";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+          </div>
           <button
             type="submit"
             disabled={isPriceLocked}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{
               background: isPriceLocked ? "#404043" : "#363639",
               border: "1px solid #404043",
@@ -119,11 +136,8 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
             Save
           </button>
         </div>
-        <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>
-          Changing price won't affect people who already joined.
-        </p>
         {error && (
-          <p className="text-sm" style={{ color: "#E23642" }}>{error}</p>
+          <p className="text-xs" style={{ color: "#E23642" }}>{error}</p>
         )}
       </div>
     </form>
