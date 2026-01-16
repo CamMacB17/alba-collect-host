@@ -87,7 +87,7 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-1">
-        <div className="flex gap-2 items-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <input
             type="text"
             id="price"
@@ -95,7 +95,7 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
             defaultValue={currentPricePounds ?? ""}
             placeholder="0.00"
             disabled={isPriceLocked}
-            className="flex-1 px-3 py-2 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm tabular-nums"
+            className="w-full sm:flex-1 px-3 py-2 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm tabular-nums min-w-0"
             style={{
               background: "#2C2C2F",
               border: "1px solid #404043",
@@ -113,7 +113,7 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
           <button
             type="submit"
             disabled={isPriceLocked}
-            className="px-3 py-2 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="w-full sm:w-auto px-3 py-2 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{
               background: isPriceLocked ? "#404043" : "#10b981",
               color: "white"

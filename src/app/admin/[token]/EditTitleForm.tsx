@@ -27,7 +27,7 @@ export default function EditTitleForm({ eventId, currentTitle, token }: { eventI
           name="title"
           defaultValue={currentTitle}
           required
-          className="flex-1 px-3 py-2 rounded text-sm font-medium transition-all min-w-0"
+          className="w-full sm:flex-1 px-3 py-2 rounded text-sm font-medium transition-all min-w-0"
           style={{
             background: "#2C2C2F",
             border: "1px solid #404043",
