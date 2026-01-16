@@ -413,12 +413,12 @@ export async function cleanupAbandonedPledges(adminToken: string): Promise<{ cle
   return { cleaned: count };
 }
 
-export async function refundPayment(paymentId: string, adminToken: string): Promise<void> {
+export async function refundPayment(paymentId: string, adminToken: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const trimmedPaymentId = paymentId?.trim();
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedPaymentId || !trimmedToken) {
-    throw new Error("Invalid inputs");
+    return { ok: false, error: "Invalid inputs" };
   }
 
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -426,35 +426,61 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
   });
 
   if (!adminTokenRecord) {
-    throw new Error("Admin link not found");
+    return { ok: false, error: "Admin link not found" };
   }
 
-  const payment = await prisma.payment.findUnique({
-    where: { id: trimmedPaymentId },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Read payment row within transaction
+      const payment = await tx.payment.findUnique({
+        where: { id: trimmedPaymentId },
+      });
 
-  if (!payment || payment.eventId !== adminTokenRecord.eventId || payment.status !== "PAID") {
-    throw new Error("Payment not found or not eligible for refund");
+      if (!payment || payment.eventId !== adminTokenRecord.eventId) {
+        throw new Error("Payment not found");
+      }
+
+      // Hard fail if not PAID
+      if (payment.status !== "PAID") {
+        throw new Error("Payment is not PAID and cannot be refunded");
+      }
+
+      // Hard fail if already refunded
+      if (payment.refundedAt !== null || payment.stripeRefundId !== null) {
+        throw new Error("Payment has already been refunded");
+      }
+
+      if (!payment.stripePaymentIntentId) {
+        throw new Error("Payment has no Stripe Payment Intent ID for refund");
+      }
+
+      // Call Stripe refund
+      const stripe = getStripe();
+      const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+
+      // Update payment with refund metadata
+      await tx.payment.update({
+        where: { id: trimmedPaymentId },
+        data: {
+          status: "CANCELLED",
+          paidAt: undefined,
+          amountPenceCaptured: 0,
+          refundedAt: new Date(),
+          stripeRefundId: refund.id,
+        },
+      });
+    });
+
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof Error) {
+      return { ok: false, error: err.message };
+    }
+    return { ok: false, error: "Failed to refund payment" };
   }
-
-  if (!payment.stripePaymentIntentId) {
-    throw new Error("Payment has no Stripe Payment Intent ID for refund");
-  }
-
-  const stripe = getStripe();
-  await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
-
-  await prisma.payment.update({
-    where: { id: trimmedPaymentId },
-    data: {
-      status: "CANCELLED",
-      paidAt: null,
-      amountPenceCaptured: 0,
-    },
-  });
 }
 
-export async function refundAllPaidPayments(adminToken: string): Promise<{ refunded: number; failed: number }> {
+export async function refundAllPaidPayments(adminToken: string): Promise<{ attempted: number; refunded: number; skippedAlreadyRefunded: number; failed: number }> {
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedToken || trimmedToken.length === 0) {
@@ -469,17 +495,33 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ refun
     throw new Error("Admin link not found");
   }
 
-  // Find all PAID payments for this event
+  // Find all PAID payments for this event that are not already refunded
   const paidPayments = await prisma.payment.findMany({
     where: {
       eventId: adminTokenRecord.eventId,
       status: "PAID",
+      refundedAt: null,
+      stripeRefundId: null,
     },
   });
 
   const stripe = getStripe();
   let refunded = 0;
   let failed = 0;
+  let skippedAlreadyRefunded = 0;
+
+  // Also count payments that are PAID but already have refund metadata (shouldn't happen, but defensive)
+  const alreadyRefundedCount = await prisma.payment.count({
+    where: {
+      eventId: adminTokenRecord.eventId,
+      status: "PAID",
+      OR: [
+        { refundedAt: { not: null } },
+        { stripeRefundId: { not: null } },
+      ],
+    },
+  });
+  skippedAlreadyRefunded = alreadyRefundedCount;
 
   // Refund each payment
   for (const payment of paidPayments) {
@@ -489,15 +531,31 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ refun
         continue;
       }
 
-      await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+      // Use transaction for each refund to ensure atomicity
+      await prisma.$transaction(async (tx) => {
+        // Re-check within transaction to prevent double-refund
+        const currentPayment = await tx.payment.findUnique({
+          where: { id: payment.id },
+        });
 
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: "CANCELLED",
-          paidAt: undefined,
-          amountPenceCaptured: 0,
-        },
+        if (!currentPayment || currentPayment.status !== "PAID" || currentPayment.refundedAt !== null || currentPayment.stripeRefundId !== null) {
+          throw new Error("Payment is no longer eligible for refund");
+        }
+
+        // Call Stripe refund
+        const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+
+        // Update payment with refund metadata
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: "CANCELLED",
+            paidAt: undefined,
+            amountPenceCaptured: 0,
+            refundedAt: new Date(),
+            stripeRefundId: refund.id,
+          },
+        });
       });
 
       refunded++;
@@ -507,5 +565,5 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ refun
     }
   }
 
-  return { refunded, failed };
+  return { attempted: paidPayments.length, refunded, skippedAlreadyRefunded, failed };
 }

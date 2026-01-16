@@ -74,6 +74,8 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
       status: true,
       createdAt: true,
       stripePaymentIntentId: true,
+      refundedAt: true,
+      stripeRefundId: true,
     },
     orderBy: {
       createdAt: "asc",
@@ -251,7 +253,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                     >
                       {payment.status}
                     </span>
-                    {payment.status === "CANCELLED" && payment.stripePaymentIntentId && (
+                    {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
                       <span className="text-sm text-gray-600">Refunded</span>
                     )}
                     {payment.status === "PLEDGED" && (
@@ -261,7 +263,11 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                       </>
                     )}
                     {payment.status === "PAID" && (
-                      <RefundButton paymentId={payment.id} token={token} />
+                      <RefundButton 
+                        paymentId={payment.id} 
+                        token={token} 
+                        isAlreadyRefunded={payment.refundedAt !== null || payment.stripeRefundId !== null}
+                      />
                     )}
                   </div>
                 </div>

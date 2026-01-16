@@ -7,7 +7,7 @@ import { refundAllPaidPayments } from "./actions";
 export default function RefundAllButton({ token }: { token: string }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{ refunded: number; failed: number } | null>(null);
+  const [result, setResult] = useState<{ attempted: number; refunded: number; skippedAlreadyRefunded: number; failed: number } | null>(null);
 
   const handleRefundAll = async () => {
     if (!confirm("Refund all paid payments? This cannot be undone.")) {
@@ -38,7 +38,7 @@ export default function RefundAllButton({ token }: { token: string }) {
       </button>
       {result && (
         <span className="text-xs text-gray-600">
-          Refunded {result.refunded}, failed {result.failed}
+          Refunded {result.refunded}, skipped {result.skippedAlreadyRefunded}, failed {result.failed}
         </span>
       )}
     </div>

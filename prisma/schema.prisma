@@ -52,6 +52,8 @@ model Payment {
   stripePaymentIntentId   String?
   paidAt                  DateTime?
   amountPenceCaptured     Int?
+  refundedAt              DateTime?
+  stripeRefundId          String?
   event                   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, email])
