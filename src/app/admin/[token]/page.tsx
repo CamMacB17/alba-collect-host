@@ -281,6 +281,51 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                 </div>
               </div>
             </div>
+
+            {/* Cleanup */}
+            <div>
+              <CleanupButton token={token} />
+            </div>
+
+            {/* Recent Actions */}
+            <div className="card">
+              <h2 className="text-base font-semibold mb-3" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
+              {actionLogs.length === 0 ? (
+                <p className="text-xs py-3" style={{ color: "#FFFFE0", opacity: 0.6 }}>No actions logged yet</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {actionLogs.map((log) => {
+                    const metadata = log.metadataJson as Record<string, unknown>;
+                    let summary = "";
+                    
+                    if (log.actionType === "REFUND_ALL") {
+                      const refunded = metadata.refunded as number | undefined;
+                      const attempted = metadata.attempted as number | undefined;
+                      const failed = metadata.failed as number | undefined;
+                      summary = `Refunded ${refunded || 0} of ${attempted || 0} payments${failed && failed > 0 ? `, ${failed} failed` : ""}`;
+                    } else if (log.actionType === "EVENT_CLOSE") {
+                      summary = "Event closed";
+                    } else if (log.actionType === "EVENT_REOPEN") {
+                      summary = "Event reopened";
+                    }
+
+                    return (
+                      <div key={log.id} className="flex items-start justify-between py-1.5" style={{ borderBottom: "1px solid #404043" }}>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium" style={{ color: "#FFFFE0" }}>{log.actionType.replace(/_/g, " ")}</span>
+                          {summary && (
+                            <span className="text-xs ml-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>— {summary}</span>
+                          )}
+                        </div>
+                        <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.5 }}>
+                          {log.createdAt ? formatDate(log.createdAt) : "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column */}
@@ -327,145 +372,100 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
               </div>
             )}
 
-            {/* Cleanup */}
-            <div>
-              <CleanupButton token={token} />
+            {/* Attendees Table - Moved to Right Column */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold" style={{ color: "#FFFFE0" }}>Attendees</h2>
+                {sortedPayments.length > 0 && (
+                  <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                    {sortedPayments.length} {sortedPayments.length === 1 ? "person" : "people"}
+                  </span>
+                )}
+              </div>
+              {sortedPayments.length === 0 ? (
+                <div className="py-8 text-center">
+                  <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>No one has joined yet</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto -mx-4 px-4">
+                  <table className="w-full">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #404043" }}>
+                        <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Name</th>
+                        <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Email</th>
+                        <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</th>
+                        <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Date</th>
+                        <th className="text-right py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedPayments.map((payment) => (
+                        <tr 
+                          key={payment.id} 
+                          style={{ borderBottom: "1px solid #404043" }}
+                          className="hover:opacity-90 transition-opacity"
+                        >
+                          <td className="py-3 px-3">
+                            <div className="text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
+                                style={{
+                                  background: payment.status === "PAID" 
+                                    ? "rgba(251, 185, 36, 0.2)" 
+                                    : payment.status === "PLEDGED"
+                                    ? "rgba(251, 185, 36, 0.15)"
+                                    : "rgba(255, 255, 224, 0.1)",
+                                  color: payment.status === "PAID"
+                                    ? "#FBB924"
+                                    : payment.status === "PLEDGED"
+                                    ? "#FBB924"
+                                    : "#FFFFE0",
+                                  opacity: payment.status === "CANCELLED" ? 0.7 : 1
+                                }}
+                              >
+                                {payment.status}
+                              </span>
+                              {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
+                                <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>Refunded</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                              {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {payment.status === "PLEDGED" && (
+                                <>
+                                  <MarkPaidButton paymentId={payment.id} token={token} />
+                                  <RemoveButton paymentId={payment.id} token={token} />
+                                </>
+                              )}
+                              {payment.status === "PAID" && (
+                                <RefundButton 
+                                  paymentId={payment.id} 
+                                  token={token} 
+                                  isAlreadyRefunded={payment.refundedAt !== null || payment.stripeRefundId !== null}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Attendees Table - Full Width */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold" style={{ color: "#FFFFE0" }}>Attendees</h2>
-            {sortedPayments.length > 0 && (
-              <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
-                {sortedPayments.length} {sortedPayments.length === 1 ? "person" : "people"}
-              </span>
-            )}
-          </div>
-          {sortedPayments.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>No one has joined yet</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-4 px-4">
-              <table className="w-full">
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #404043" }}>
-                    <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Name</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Email</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Date</th>
-                    <th className="text-right py-2 px-3 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedPayments.map((payment) => (
-                    <tr 
-                      key={payment.id} 
-                      style={{ borderBottom: "1px solid #404043" }}
-                      className="hover:opacity-90 transition-opacity"
-                    >
-                      <td className="py-3 px-3">
-                        <div className="text-sm font-medium" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
-                            style={{
-                              background: payment.status === "PAID" 
-                                ? "rgba(251, 185, 36, 0.2)" 
-                                : payment.status === "PLEDGED"
-                                ? "rgba(251, 185, 36, 0.15)"
-                                : "rgba(255, 255, 224, 0.1)",
-                              color: payment.status === "PAID"
-                                ? "#FBB924"
-                                : payment.status === "PLEDGED"
-                                ? "#FBB924"
-                                : "#FFFFE0",
-                              opacity: payment.status === "CANCELLED" ? 0.7 : 1
-                            }}
-                          >
-                            {payment.status}
-                          </span>
-                          {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
-                            <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>Refunded</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
-                          {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
-                        </div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {payment.status === "PLEDGED" && (
-                            <>
-                              <MarkPaidButton paymentId={payment.id} token={token} />
-                              <RemoveButton paymentId={payment.id} token={token} />
-                            </>
-                          )}
-                          {payment.status === "PAID" && (
-                            <RefundButton 
-                              paymentId={payment.id} 
-                              token={token} 
-                              isAlreadyRefunded={payment.refundedAt !== null || payment.stripeRefundId !== null}
-                            />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Actions */}
-        <div className="card">
-          <h2 className="text-base font-semibold mb-3" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
-          {actionLogs.length === 0 ? (
-            <p className="text-xs py-3" style={{ color: "#FFFFE0", opacity: 0.6 }}>No actions logged yet</p>
-          ) : (
-            <div className="space-y-1.5">
-              {actionLogs.map((log) => {
-                const metadata = log.metadataJson as Record<string, unknown>;
-                let summary = "";
-                
-                if (log.actionType === "REFUND_ALL") {
-                  const refunded = metadata.refunded as number | undefined;
-                  const attempted = metadata.attempted as number | undefined;
-                  const failed = metadata.failed as number | undefined;
-                  summary = `Refunded ${refunded || 0} of ${attempted || 0} payments${failed && failed > 0 ? `, ${failed} failed` : ""}`;
-                } else if (log.actionType === "EVENT_CLOSE") {
-                  summary = "Event closed";
-                } else if (log.actionType === "EVENT_REOPEN") {
-                  summary = "Event reopened";
-                }
-
-                return (
-                  <div key={log.id} className="flex items-start justify-between py-1.5" style={{ borderBottom: "1px solid #404043" }}>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium" style={{ color: "#FFFFE0" }}>{log.actionType.replace(/_/g, " ")}</span>
-                      {summary && (
-                        <span className="text-xs ml-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>— {summary}</span>
-                      )}
-                    </div>
-                    <span className="text-xs whitespace-nowrap ml-4" style={{ color: "#FFFFE0", opacity: 0.5 }}>
-                      {log.createdAt ? formatDate(log.createdAt) : "—"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     </main>
