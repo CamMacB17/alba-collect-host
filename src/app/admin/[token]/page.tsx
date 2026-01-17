@@ -10,6 +10,7 @@ import EditPriceForm from "./EditPriceForm";
 import CloseReopenButton from "./CloseReopenButton";
 import CopyButton from "./CopyButton";
 import CleanupButton from "./CleanupButton";
+import RegenerateAdminLinkButton from "./RegenerateAdminLinkButton";
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -41,7 +42,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
     where: { token },
   });
 
-  if (!adminToken) {
+  // Check if token exists and is not expired
+  const now = new Date();
+  const isExpired = adminToken?.expiresAt !== null && adminToken?.expiresAt !== undefined && adminToken.expiresAt < now;
+
+  if (!adminToken || isExpired) {
+    // Do not reveal whether token is invalid or expired (no information leakage)
     return (
       <main className="min-h-screen p-4 sm:p-6" style={{ background: "#2C2C2F" }}>
         <div className="max-w-6xl mx-auto">
@@ -360,18 +366,28 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
             </div>
 
             {/* Danger Zone */}
-            {paidCount > 0 && (
-              <div className="card" style={{ 
-                background: "rgba(226, 54, 66, 0.08)", 
-                border: "1px solid rgba(226, 54, 66, 0.3)" 
-              }}>
-                <h2 className="text-sm font-semibold mb-1.5" style={{ color: "#E23642" }}>Danger Zone</h2>
-                <p className="text-xs mb-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
-                  Refund all paid payments. Cannot be undone.
-                </p>
-                <RefundAllButton token={token} />
+            <div className="card" style={{ 
+              background: "rgba(226, 54, 66, 0.08)", 
+              border: "1px solid rgba(226, 54, 66, 0.3)" 
+            }}>
+              <h2 className="text-sm font-semibold mb-1.5" style={{ color: "#E23642" }}>Danger Zone</h2>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs mb-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                    Regenerate admin link. Current link will stop working immediately.
+                  </p>
+                  <RegenerateAdminLinkButton token={token} />
+                </div>
+                {paidCount > 0 && (
+                  <div>
+                    <p className="text-xs mb-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                      Refund all paid payments. Cannot be undone.
+                    </p>
+                    <RefundAllButton token={token} />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Attendees Table - Moved to Right Column */}
             <div className="card">

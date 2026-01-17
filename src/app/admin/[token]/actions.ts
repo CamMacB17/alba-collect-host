@@ -8,6 +8,7 @@ import { logAdminAction } from "@/lib/adminActionLog";
 import { sendRefundConfirmationEmail } from "@/lib/email";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { headers } from "next/headers";
+import { randomBytes } from "crypto";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
   // Validate inputs are non-empty after trim
@@ -818,4 +819,112 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
   });
 
   return result;
+}
+
+function generateToken(): string {
+  // Generate a secure random token of at least 24 characters
+  return randomBytes(18).toString("base64url");
+}
+
+export async function regenerateAdminToken(adminToken: string): Promise<{ ok: true; adminUrl: string } | { ok: false; error: string }> {
+  const correlationId = generateCorrelationId();
+  const trimmedToken = adminToken?.trim();
+
+  if (!trimmedToken || trimmedToken.length === 0) {
+    return { ok: false, error: "Admin token is required" };
+  }
+
+  try {
+    // Look up current admin token
+    const currentAdminToken = await prisma.adminToken.findUnique({
+      where: { token: trimmedToken },
+      include: { event: true },
+    });
+
+    if (!currentAdminToken) {
+      return { ok: false, error: "Admin link not found" };
+    }
+
+    // Check if token is expired
+    const now = new Date();
+    const isExpired = currentAdminToken.expiresAt !== null && currentAdminToken.expiresAt !== undefined && currentAdminToken.expiresAt < now;
+
+    if (isExpired) {
+      return { ok: false, error: "Admin link not found" };
+    }
+
+    // Generate new token
+    let newToken = generateToken();
+    let attempts = 0;
+    while (attempts < 10) {
+      const existingToken = await prisma.adminToken.findUnique({
+        where: { token: newToken },
+      });
+      if (!existingToken) {
+        break;
+      }
+      newToken = generateToken();
+      attempts++;
+    }
+
+    if (attempts >= 10) {
+      return { ok: false, error: "Failed to generate unique token" };
+    }
+
+    // Set expiresAt to 90 days from now for new token
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
+
+    // Build baseUrl for admin URL
+    const h = await headers();
+    const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+    let baseUrl: string;
+    if (envBase) {
+      baseUrl = envBase.replace(/\/$/, "");
+    } else {
+      const proto = h.get("x-forwarded-proto") ?? "http";
+      const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+      baseUrl = `${proto}://${host}`;
+    }
+
+    // In a transaction: expire old token and create new token
+    await prisma.$transaction(async (tx) => {
+      // Expire old token
+      await tx.adminToken.update({
+        where: { id: currentAdminToken.id },
+        data: { expiresAt: now },
+      });
+
+      // Create new token
+      await tx.adminToken.create({
+        data: {
+          eventId: currentAdminToken.eventId,
+          token: newToken,
+          expiresAt,
+        },
+      });
+    });
+
+    // Log the action
+    await logAdminAction({
+      eventId: currentAdminToken.eventId,
+      adminToken: trimmedToken,
+      actionType: "regenerate_admin_token",
+      metadata: {
+        oldTokenId: currentAdminToken.id,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    logger.info("Admin token regenerated", { correlationId, eventId: currentAdminToken.eventId });
+
+    const adminUrl = `${baseUrl}/admin/${newToken}`;
+    return { ok: true, adminUrl };
+  } catch (err) {
+    logger.error("Failed to regenerate admin token", { correlationId, error: err });
+    if (err instanceof Error) {
+      return { ok: false, error: err.message };
+    }
+    return { ok: false, error: "Failed to regenerate admin token" };
+  }
 }

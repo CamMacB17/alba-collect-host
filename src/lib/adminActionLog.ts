@@ -14,7 +14,7 @@ function hashAdminToken(token: string): string {
 export async function logAdminAction(args: {
   eventId: string;
   adminToken: string;
-  actionType: "EVENT_CLOSE" | "EVENT_REOPEN" | "REFUND_ALL";
+  actionType: "EVENT_CLOSE" | "EVENT_REOPEN" | "REFUND_ALL" | "regenerate_admin_token";
   metadata: Record<string, unknown>;
 }): Promise<void> {
   const { eventId, adminToken, actionType, metadata } = args;

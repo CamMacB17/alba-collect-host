@@ -64,11 +64,12 @@ model Payment {
 }
 
 model AdminToken {
-  id        String   @id @default(cuid())
-  eventId   String   @unique
-  token     String   @unique
-  createdAt DateTime @default(now())
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  eventId   String    @unique
+  token     String    @unique
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model StripeWebhookEvent {

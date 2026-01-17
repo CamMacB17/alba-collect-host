@@ -92,6 +92,10 @@ export async function POST(request: Request) {
     }
 
     // Create Event and AdminToken in a transaction
+    // Set expiresAt to 90 days from now for new tokens
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
+
     const event = await prisma.event.create({
       data: {
         slug,
@@ -103,6 +107,7 @@ export async function POST(request: Request) {
         adminToken: {
           create: {
             token,
+            expiresAt,
           },
         },
       },
