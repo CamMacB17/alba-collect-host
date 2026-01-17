@@ -1,6 +1,11 @@
 import { getPublicEventView } from "@/lib/event";
 import { prisma } from "@/lib/prisma";
 import JoinAndPayClient from "./JoinAndPayClient";
+import PaymentStatusPolling from "./PaymentStatusPolling";
+import { unstable_noStore } from "next/cache";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function formatPrice(pence: number | null): string {
   if (pence === null) return "Free";
@@ -13,10 +18,12 @@ export default async function EventPage({
   searchParams,
 }: { 
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ success?: string; canceled?: string; email?: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string; email?: string; paymentId?: string }>;
 }) {
+  unstable_noStore();
+  
   const { slug } = await params;
-  const { success, canceled, email } = await searchParams;
+  const { success, canceled, email, paymentId } = await searchParams;
 
   const result = await getPublicEventView(slug);
 
@@ -147,22 +154,7 @@ export default async function EventPage({
             }}
           >
             {statusMessage.type === "success" ? (
-              <>
-                <h2 className="text-base font-semibold mb-1" style={{ color: "#10b981" }}>
-                  {statusMessage.text}
-                </h2>
-                <p className="mb-1 text-xs" style={{ color: "#FFFFE0" }}>
-                  Confirming payment… If this hasn't updated in 30 seconds, refresh.
-                </p>
-                {email && (
-                  <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
-                    Paid as: {email}
-                  </p>
-                )}
-                <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
-                  Stripe will email your receipt.
-                </p>
-              </>
+              <PaymentStatusPolling paymentId={paymentId} email={email} />
             ) : (
               <p className="text-sm" style={{ 
                 color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 

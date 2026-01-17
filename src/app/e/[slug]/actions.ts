@@ -126,7 +126,7 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
         eventId: event.id,
         slug: event.slug,
       },
-      success_url: `${appUrl}/e/${slug}?success=1&email=${encodeURIComponent(normalisedEmail)}`,
+      success_url: `${appUrl}/e/${slug}?success=1&email=${encodeURIComponent(normalisedEmail)}&paymentId=${encodeURIComponent(payment.id)}`,
       cancel_url: `${appUrl}/e/${slug}?canceled=1`,
     });
   } catch (err) {
