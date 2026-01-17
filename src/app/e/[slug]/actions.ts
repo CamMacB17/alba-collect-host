@@ -122,7 +122,8 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
         eventId: event.id,
         slug: event.slug,
       },
-      success_url: `${appUrl}/e/${slug}?success=1&email=${encodeURIComponent(normalisedEmail)}&paymentId=${encodeURIComponent(payment.id)}`,
+      client_reference_id: payment.id,
+      success_url: `${appUrl}/e/${slug}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/e/${slug}?canceled=1`,
     });
   } catch (err) {
@@ -137,7 +138,11 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
     return { error: "No checkout URL returned" };
   }
 
-  // Persist stripeCheckoutSessionId on Payment
+  if (!session.id) {
+    return { error: "No checkout session ID returned" };
+  }
+
+  // Persist stripeCheckoutSessionId on Payment (canonical booking identifier)
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
