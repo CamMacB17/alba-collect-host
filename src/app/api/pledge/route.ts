@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
@@ -50,56 +51,97 @@ export async function POST(request: Request) {
       );
     }
 
-    // Count spots taken (PLEDGED + PAID)
-    const spotsTaken = await prisma.payment.count({
-      where: {
-        eventId: event.id,
-        status: {
-          in: ["PLEDGED", "PAID"],
-        },
-      },
-    });
-
-    // Check if event is full
-    if (event.maxSpots !== null && spotsTaken >= event.maxSpots) {
+    // Check if event is closed
+    if (event.closedAt !== null) {
       return NextResponse.json(
-        { error: "Event is full" },
+        { error: "Event is closed" },
         { status: 409 }
       );
     }
 
-    // Check if payment already exists for this event and email (duplicate pledge check)
-    const existingPayment = await prisma.payment.findFirst({
-      where: {
-        eventId: event.id,
-        email: trimmedEmail,
-        status: {
-          in: ["PLEDGED", "PAID"],
-        },
-      },
-    });
+    // Atomic transaction: capacity check + duplicate check + payment creation
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Count spots taken (PLEDGED + PAID) within transaction
+        const spotsTaken = await tx.payment.count({
+          where: {
+            eventId: event.id,
+            status: {
+              in: ["PLEDGED", "PAID"],
+            },
+          },
+        });
 
-    if (existingPayment) {
-      return NextResponse.json(
-        { error: "Duplicate pledge" },
-        { status: 409 }
-      );
+        // Check if event is full
+        if (event.maxSpots !== null && spotsTaken >= event.maxSpots) {
+          throw new Error("EVENT_FULL");
+        }
+
+        // Check if payment already exists for this event and email (duplicate pledge check)
+        const existingPayment = await tx.payment.findFirst({
+          where: {
+            eventId: event.id,
+            email: trimmedEmail,
+            status: {
+              in: ["PLEDGED", "PAID"],
+            },
+          },
+        });
+
+        if (existingPayment) {
+          throw new Error("DUPLICATE_PLEDGE");
+        }
+
+        // Create Payment with PLEDGED status
+        await tx.payment.create({
+          data: {
+            eventId: event.id,
+            name: name.trim(),
+            email: trimmedEmail,
+            amountPence: event.pricePence,
+            status: "PLEDGED",
+          },
+        });
+      });
+    } catch (txError) {
+      // Handle transaction errors
+      if (txError instanceof Error) {
+        if (txError.message === "EVENT_FULL") {
+          return NextResponse.json(
+            { error: "Event is full" },
+            { status: 409 }
+          );
+        }
+        if (txError.message === "DUPLICATE_PLEDGE") {
+          return NextResponse.json(
+            { error: "Already joined" },
+            { status: 409 }
+          );
+        }
+      }
+
+      // Handle unique constraint violation (race condition: another request created payment)
+      if (
+        txError instanceof Prisma.PrismaClientKnownRequestError &&
+        txError.code === "P2002"
+      ) {
+        console.error("[pledge] Unique constraint violation (race condition):", {
+          slug,
+          email: trimmedEmail,
+        });
+        return NextResponse.json(
+          { error: "Already joined" },
+          { status: 409 }
+        );
+      }
+
+      // Re-throw unknown errors to be caught by outer catch
+      throw txError;
     }
-
-    // Create Payment with PLEDGED status
-    await prisma.payment.create({
-      data: {
-        eventId: event.id,
-        name: name.trim(),
-        email: trimmedEmail,
-        amountPence: event.pricePence,
-        status: "PLEDGED",
-      },
-    });
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
-    console.error("Error creating pledge:", error);
+    console.error("[pledge] Error creating pledge:", error);
     return NextResponse.json(
       { error: "Failed to create pledge" },
       { status: 500 }
