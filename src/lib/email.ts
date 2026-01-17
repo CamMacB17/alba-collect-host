@@ -78,7 +78,7 @@ View event: ${eventUrl}`;
     }
 
     await resend.emails.send(emailOptions);
-    logger.info("Payment confirmation email sent", { correlationId, to, eventTitle, replyTo });
+    logger.info("Payment confirmation email sent", { correlationId, to, recipient: to, eventTitle, replyTo });
   } catch (error) {
     logger.error("Failed to send payment confirmation email", { correlationId, to, error });
     throw error;
@@ -207,7 +207,7 @@ export async function sendEmail(args: {
       subject,
       text: body,
     });
-    logger.info("Email sent", { correlationId, to, subject });
+    logger.info("Email sent", { correlationId, to, recipient: to, subject });
   } catch (error) {
     logger.error("Failed to send email", { correlationId, to, subject, error });
     throw error;
