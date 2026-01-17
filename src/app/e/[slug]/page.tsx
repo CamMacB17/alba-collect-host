@@ -173,8 +173,8 @@ export default async function EventPage({
           </div>
         )}
 
-        {/* Join Card */}
-        {!isClosed && !isFull && (
+        {/* Join Card - Hide if user has already joined (success state) */}
+        {!isClosed && !isFull && statusMessage?.type !== "success" && (
           <div className="card">
             <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
           </div>
