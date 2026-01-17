@@ -7,10 +7,14 @@ import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logAdminAction } from "@/lib/adminActionLog";
 import { sendRefundConfirmationEmail } from "@/lib/email";
 import { logger, generateCorrelationId } from "@/lib/logger";
+import { assertRateLimitOrThrow } from "@/lib/rateLimit";
 import { headers } from "next/headers";
 import { randomBytes } from "crypto";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs are non-empty after trim
   const trimmedPaymentId = paymentId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -22,6 +26,9 @@ export async function cancelPledge(paymentId: string, adminToken: string): Promi
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -54,9 +61,24 @@ export async function cancelPledge(paymentId: string, adminToken: string): Promi
     where: { id: trimmedPaymentId },
     data: { status: "CANCELLED" },
   });
+
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "cancel_pledge",
+    metadata: {
+      paymentId: trimmedPaymentId,
+      oldStatus: payment.status,
+      timestamp: new Date().toISOString(),
+    },
+  });
 }
 
 export async function markPaid(paymentId: string, adminToken: string): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs are non-empty after trim
   const trimmedPaymentId = paymentId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -68,6 +90,9 @@ export async function markPaid(paymentId: string, adminToken: string): Promise<v
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -110,9 +135,24 @@ export async function markPaid(paymentId: string, adminToken: string): Promise<v
     where: { id: trimmedPaymentId },
     data: updateData,
   });
+
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "mark_paid",
+    metadata: {
+      paymentId: trimmedPaymentId,
+      oldStatus: payment.status,
+      timestamp: new Date().toISOString(),
+    },
+  });
 }
 
 export async function updateEventTitle(eventId: string, title: string, adminToken: string): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs are non-empty after trim
   const trimmedEventId = eventId?.trim();
   const trimmedTitle = title?.trim();
@@ -129,6 +169,9 @@ export async function updateEventTitle(eventId: string, title: string, adminToke
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -153,10 +196,25 @@ export async function updateEventTitle(eventId: string, title: string, adminToke
     throw new Error("Event not found");
   }
 
+  // Get old title for logging
+  const oldTitle = event.title;
+
   // Update Event.title
   await prisma.event.update({
     where: { id: trimmedEventId },
     data: { title: trimmedTitle },
+  });
+
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "update_event_title",
+    metadata: {
+      oldTitle,
+      newTitle: trimmedTitle,
+      timestamp: new Date().toISOString(),
+    },
   });
 }
 
@@ -165,6 +223,9 @@ export async function updateMaxSpots(
   maxSpots: number | null,
   adminToken: string
 ): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -176,6 +237,9 @@ export async function updateMaxSpots(
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Validate maxSpots is a number
   if (maxSpots === null || maxSpots === undefined || isNaN(maxSpots)) {
@@ -231,10 +295,25 @@ export async function updateMaxSpots(
     throw new Error("Cannot set max spots below current number of participants");
   }
 
+  // Get old maxSpots for logging
+  const oldMaxSpots = event.maxSpots;
+
   // Update Event.maxSpots (always a number now)
   await prisma.event.update({
     where: { id: trimmedEventId },
     data: { maxSpots: maxSpotsNumber },
+  });
+
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "update_event_max_spots",
+    metadata: {
+      oldMaxSpots,
+      newMaxSpots: maxSpotsNumber,
+      timestamp: new Date().toISOString(),
+    },
   });
 }
 
@@ -243,6 +322,9 @@ export async function updateEventPrice(
   pricePence: number | null,
   adminToken: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -254,6 +336,9 @@ export async function updateEventPrice(
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Validate pricePence is a number
   if (pricePence === null || pricePence === undefined || isNaN(pricePence)) {
@@ -313,16 +398,34 @@ export async function updateEventPrice(
     }
   }
 
+  // Get old price for logging
+  const oldPricePence = event.pricePence;
+
   // Update ONLY Event.pricePence (always a number now)
   await prisma.event.update({
     where: { id: trimmedEventId },
     data: { pricePence: pricePenceNumber },
   });
 
+  // Log the action
+  await logAdminAction({
+    eventId: adminTokenRecord.eventId,
+    adminToken: trimmedToken,
+    actionType: "update_event_price",
+    metadata: {
+      oldPricePence,
+      newPricePence: pricePenceNumber,
+      timestamp: new Date().toISOString(),
+    },
+  });
+
   return { ok: true };
 }
 
 export async function closeEvent(eventId: string, adminToken: string): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -334,6 +437,9 @@ export async function closeEvent(eventId: string, adminToken: string): Promise<v
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -376,6 +482,9 @@ export async function closeEvent(eventId: string, adminToken: string): Promise<v
 }
 
 export async function reopenEvent(eventId: string, adminToken: string): Promise<void> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate inputs
   const trimmedEventId = eventId?.trim();
   const trimmedToken = adminToken?.trim();
@@ -387,6 +496,9 @@ export async function reopenEvent(eventId: string, adminToken: string): Promise<
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -452,11 +564,19 @@ export async function cleanupAbandonedPledges(adminToken: string): Promise<{ cle
 
 export async function refundPayment(paymentId: string, adminToken: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const correlationId = generateCorrelationId();
+  const h = await headers();
   const trimmedPaymentId = paymentId?.trim();
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedPaymentId || !trimmedToken) {
     return { ok: false, error: "Invalid inputs" };
+  }
+
+  // Rate limit check
+  try {
+    await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
+  } catch (rateLimitError) {
+    return { ok: false, error: rateLimitError instanceof Error ? rateLimitError.message : "Too many requests" };
   }
 
   const adminTokenRecord = await prisma.adminToken.findUnique({
@@ -593,6 +713,17 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
       }
     }
 
+    // Log the action
+    await logAdminAction({
+      eventId: adminTokenRecord.eventId,
+      adminToken: trimmedToken,
+      actionType: "refund_payment",
+      metadata: {
+        paymentId: trimmedPaymentId,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     return { ok: true };
   } catch (err) {
     if (err instanceof Error) {
@@ -604,11 +735,15 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
 
 export async function refundAllPaidPayments(adminToken: string): Promise<{ attempted: number; refunded: number; skippedAlreadyRefunded: number; failed: number }> {
   const correlationId = generateCorrelationId();
+  const h = await headers();
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   const adminTokenRecord = await prisma.adminToken.findUnique({
     where: { token: trimmedToken },
@@ -647,7 +782,6 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
   skippedAlreadyRefunded = alreadyRefundedCount;
 
   // Build baseUrl once for all emails
-  const h = await headers();
   const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
   let baseUrl: string;
   if (envBase) {
@@ -834,6 +968,14 @@ export async function regenerateAdminToken(adminToken: string): Promise<{ ok: tr
     return { ok: false, error: "Admin token is required" };
   }
 
+  // Rate limit check
+  const h = await headers();
+  try {
+    await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
+  } catch (rateLimitError) {
+    return { ok: false, error: rateLimitError instanceof Error ? rateLimitError.message : "Too many requests" };
+  }
+
   try {
     // Look up current admin token
     const currentAdminToken = await prisma.adminToken.findUnique({
@@ -875,8 +1017,7 @@ export async function regenerateAdminToken(adminToken: string): Promise<{ ok: tr
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 
-    // Build baseUrl for admin URL
-    const h = await headers();
+    // Build baseUrl for admin URL (reuse headers from rate limit check)
     const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
     let baseUrl: string;
     if (envBase) {
