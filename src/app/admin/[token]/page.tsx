@@ -11,6 +11,7 @@ import CloseReopenButton from "./CloseReopenButton";
 import CopyButton from "./CopyButton";
 import CleanupButton from "./CleanupButton";
 import RegenerateAdminLinkButton from "./RegenerateAdminLinkButton";
+import VersionFooter from "./VersionFooter";
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -487,11 +488,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
       </div>
       
       {/* Version footer */}
-      <div className="mt-8 pt-4 text-center">
-        <p className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>
-          Version: {process.env.NEXT_PUBLIC_BUILD_ID || "unknown"}
-        </p>
-      </div>
+      <VersionFooter />
     </main>
   );
 }
