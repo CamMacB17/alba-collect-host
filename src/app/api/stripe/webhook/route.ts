@@ -149,49 +149,61 @@ export async function POST(request: NextRequest) {
         });
 
         if (payment && payment.event && !payment.receiptEmailSentAt) {
-          // Build baseUrl for event link
-          const h = await headers();
-          const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
-          let baseUrl: string;
-          if (envBase) {
-            baseUrl = envBase.replace(/\/$/, "");
-          } else {
-            const proto = h.get("x-forwarded-proto") ?? "http";
-            const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-            baseUrl = `${proto}://${host}`;
-          }
-
-          // Send payment confirmation email (idempotent: only if receiptEmailSentAt is null)
-          try {
-            const eventUrl = `${baseUrl}/e/${payment.event.slug}`;
-            
-            await sendPaymentConfirmationEmail({
-              to: payment.email,
-              name: payment.name,
-              eventTitle: payment.event.title,
-              amountPence: payment.amountPence,
-              eventUrl,
-              correlationId,
-              replyTo: payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0
-                ? payment.event.organiserEmail.trim()
-                : undefined,
-            });
-
-            // Mark email as sent
-            await prisma.payment.update({
-              where: { id: paymentId },
-              data: { receiptEmailSentAt: new Date() },
-            });
-          } catch (emailErr) {
-            // Log email error but don't fail the webhook
-            logger.error("Failed to send payment confirmation email", {
+          // Validate payment.email exists and is not empty
+          if (!payment.email || payment.email.trim().length === 0) {
+            logger.error("Payment missing email address - cannot send confirmation", {
               correlationId,
               paymentId,
-              error: emailErr,
+              paymentName: payment.name,
             });
+          } else {
+            // Build baseUrl for event link
+            const h = await headers();
+            const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+            let baseUrl: string;
+            if (envBase) {
+              baseUrl = envBase.replace(/\/$/, "");
+            } else {
+              const proto = h.get("x-forwarded-proto") ?? "http";
+              const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+              baseUrl = `${proto}://${host}`;
+            }
+
+            // Send payment confirmation email (idempotent: only if receiptEmailSentAt is null)
+            // Recipient: attendee (payer) email
+            try {
+              const eventUrl = `${baseUrl}/e/${payment.event.slug}`;
+              
+              await sendPaymentConfirmationEmail({
+                to: payment.email,
+                name: payment.name,
+                eventTitle: payment.event.title,
+                amountPence: payment.amountPence,
+                eventUrl,
+                correlationId,
+                replyTo: payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0
+                  ? payment.event.organiserEmail.trim()
+                  : undefined,
+              });
+
+              // Mark email as sent
+              await prisma.payment.update({
+                where: { id: paymentId },
+                data: { receiptEmailSentAt: new Date() },
+              });
+            } catch (emailErr) {
+              // Log email error but don't fail the webhook
+              logger.error("Failed to send payment confirmation email", {
+                correlationId,
+                paymentId,
+                recipient: payment.email,
+                error: emailErr,
+              });
+            }
           }
 
           // Send notification email to organiser if email exists and not already sent (idempotent)
+          // Recipient: organiserEmail (not attendee email)
           if (
             payment.event.organiserEmail &&
             payment.event.organiserEmail.trim().length > 0 &&
@@ -241,7 +253,7 @@ ${spotsDisplay}`,
               logger.error("Failed to send organiser notification email", {
                 correlationId,
                 paymentId,
-                organiserEmail: payment.event.organiserEmail,
+                recipient: payment.event.organiserEmail,
                 error: emailErr,
               });
             }

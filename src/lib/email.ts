@@ -80,7 +80,19 @@ View event: ${eventUrl}`;
     await resend.emails.send(emailOptions);
     logger.info("Payment confirmation email sent", { correlationId, to, recipient: to, eventTitle, replyTo });
   } catch (error) {
-    logger.error("Failed to send payment confirmation email", { correlationId, to, error });
+    // Log Resend rejection/suppression with full details
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const resendError = error && typeof error === "object" && "response" in error ? error.response : undefined;
+    
+    logger.error("RESEND ERROR: Payment confirmation email rejected/suppressed", {
+      correlationId,
+      to,
+      type: "payment_confirmation",
+      error: errorMessage,
+      stack: errorStack,
+      resendResponse: resendError,
+    });
     throw error;
   }
 }
@@ -209,7 +221,20 @@ export async function sendEmail(args: {
     });
     logger.info("Email sent", { correlationId, to, recipient: to, subject });
   } catch (error) {
-    logger.error("Failed to send email", { correlationId, to, subject, error });
+    // Log Resend rejection/suppression with full details
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const resendError = error && typeof error === "object" && "response" in error ? error.response : undefined;
+    
+    logger.error("RESEND ERROR: Email rejected/suppressed", {
+      correlationId,
+      to,
+      type: "organiser_notification",
+      subject,
+      error: errorMessage,
+      stack: errorStack,
+      resendResponse: resendError,
+    });
     throw error;
   }
 }

@@ -640,6 +640,7 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
     });
 
     // Send refund email if: payment exists, event exists, email exists, and email not already sent
+    // Recipient: attendee (payer) email
     if (
       updatedPayment &&
       updatedPayment.event &&
@@ -685,21 +686,21 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
         logger.info("Refund confirmation email sent", {
           correlationId,
           paymentId: trimmedPaymentId,
-          email: updatedPayment.email,
+          recipient: updatedPayment.email,
         });
       } catch (emailErr) {
         // Log email error but don't fail the refund
         logger.error("Failed to send refund confirmation email", {
           correlationId,
           paymentId: trimmedPaymentId,
-          paymentEmail: updatedPayment.email,
+          recipient: updatedPayment.email,
           error: emailErr instanceof Error ? emailErr.message : String(emailErr),
           stack: emailErr instanceof Error ? emailErr.stack : undefined,
         });
       }
     } else {
-      if (updatedPayment && !updatedPayment.email) {
-        logger.warn("Skipping refund email - payment has no email address", {
+      if (updatedPayment && (!updatedPayment.email || updatedPayment.email.trim().length === 0)) {
+        logger.error("Skipping refund email - payment has no email address", {
           correlationId,
           paymentId: trimmedPaymentId,
         });
@@ -861,6 +862,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
       });
 
       // Send refund email if not already sent (after transaction succeeds)
+      // Recipient: attendee (payer) email
       if (refundId) {
         const updatedPayment = await prisma.payment.findUnique({
           where: { id: payment.id },
@@ -901,21 +903,21 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
             logger.info("Refund confirmation email sent", {
               correlationId,
               paymentId: payment.id,
-              email: updatedPayment.email,
+              recipient: updatedPayment.email,
             });
           } catch (emailErr) {
             // Log email error but don't fail the refund
             logger.error("Failed to send refund confirmation email", {
               correlationId,
               paymentId: payment.id,
-              paymentEmail: updatedPayment.email,
+              recipient: updatedPayment.email,
               error: emailErr instanceof Error ? emailErr.message : String(emailErr),
               stack: emailErr instanceof Error ? emailErr.stack : undefined,
             });
           }
         } else {
-          if (updatedPayment && !updatedPayment.email) {
-            logger.warn("Skipping refund email - payment has no email address", {
+          if (updatedPayment && (!updatedPayment.email || updatedPayment.email.trim().length === 0)) {
+            logger.error("Skipping refund email - payment has no email address", {
               correlationId,
               paymentId: payment.id,
             });
