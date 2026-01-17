@@ -60,26 +60,35 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Read paymentId from metadata
-      const paymentId = session.metadata?.paymentId;
-      if (!paymentId) {
-        logger.warn("checkout.session.completed missing metadata.paymentId", {
-          correlationId,
-          sessionId: session.id,
-        });
-        return NextResponse.json({ received: true });
-      }
+      // Lookup payment by stripeCheckoutSessionId (canonical identifier)
+      // Fallback to paymentId from metadata for backward compatibility
+      let existingPayment = await prisma.payment.findFirst({
+        where: {
+          stripeCheckoutSessionId: session.id,
+        },
+      });
 
-      try {
-        // Load payment first to check if already PAID (idempotency check)
-        const existingPayment = await prisma.payment.findUnique({
-          where: { id: paymentId },
-        });
+      if (!existingPayment) {
+        const paymentId = session.metadata?.paymentId;
+        if (paymentId) {
+          existingPayment = await prisma.payment.findUnique({
+            where: { id: paymentId },
+          });
+        }
 
         if (!existingPayment) {
-          logger.error("Payment not found", { correlationId, paymentId, sessionId: session.id });
+          logger.error("Payment not found", { 
+            correlationId, 
+            sessionId: session.id,
+            metadataPaymentId: session.metadata?.paymentId,
+          });
           return NextResponse.json({ error: "Payment not found" }, { status: 404 });
         }
+      }
+
+      const paymentId = existingPayment.id;
+
+      try {
 
         // If already PAID, skip update and emails (idempotent)
         if (existingPayment.status === "PAID") {
@@ -257,7 +266,7 @@ ${spotsDisplay}`,
           }
         }
       } catch (err) {
-        logger.error("Failed to update payment", { correlationId, paymentId, error: err });
+        logger.error("Failed to update payment", { correlationId, paymentId: existingPayment.id, error: err });
         return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
       }
 
@@ -268,37 +277,40 @@ ${spotsDisplay}`,
     if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      const paymentId = session.metadata?.paymentId;
-      if (!paymentId) {
-        logger.warn("checkout.session.expired missing metadata.paymentId", {
+      // Lookup payment by stripeCheckoutSessionId (canonical identifier)
+      let existingPayment = await prisma.payment.findFirst({
+        where: {
+          stripeCheckoutSessionId: session.id,
+        },
+      });
+
+      // Fallback to paymentId from metadata
+      if (!existingPayment) {
+        const paymentId = session.metadata?.paymentId;
+        if (paymentId) {
+          existingPayment = await prisma.payment.findUnique({
+            where: { id: paymentId },
+          });
+        }
+      }
+
+      if (!existingPayment) {
+        logger.warn("Payment not found for expired session", {
           correlationId,
           sessionId: session.id,
+          metadataPaymentId: session.metadata?.paymentId,
         });
         return NextResponse.json({ received: true });
       }
 
       try {
-        // Load payment to check current status
-        const existingPayment = await prisma.payment.findUnique({
-          where: { id: paymentId },
-        });
-
-        if (!existingPayment) {
-          logger.warn("Payment not found for expired session", {
-            correlationId,
-            paymentId,
-            sessionId: session.id,
-          });
-          return NextResponse.json({ received: true });
-        }
-
         // Validate transition: only allow PLEDGED -> CANCELLED
         try {
           assertValidPaymentTransition(existingPayment.status, "CANCELLED");
         } catch (err) {
           logger.error("Invalid payment status transition for expired session", {
             correlationId,
-            paymentId,
+            paymentId: existingPayment.id,
             from: existingPayment.status,
             to: "CANCELLED",
             error: err instanceof Error ? err.message : String(err),
@@ -308,12 +320,12 @@ ${spotsDisplay}`,
         }
 
         await prisma.payment.update({
-          where: { id: paymentId },
+          where: { id: existingPayment.id },
           data: { status: "CANCELLED" },
         });
-        logger.info("Payment updated to CANCELLED", { correlationId, paymentId, sessionId: session.id });
+        logger.info("Payment updated to CANCELLED", { correlationId, paymentId: existingPayment.id, sessionId: session.id });
       } catch (err) {
-        logger.error("Failed to update payment on expired session", { correlationId, paymentId, error: err });
+        logger.error("Failed to update payment on expired session", { correlationId, paymentId: existingPayment.id, error: err });
         return NextResponse.json({ received: true });
       }
     }

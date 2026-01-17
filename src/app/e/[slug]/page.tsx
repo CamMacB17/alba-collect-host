@@ -18,12 +18,12 @@ export default async function EventPage({
   searchParams,
 }: { 
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ success?: string; canceled?: string; email?: string; paymentId?: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string; email?: string; paymentId?: string; session_id?: string }>;
 }) {
   unstable_noStore();
   
   const { slug } = await params;
-  const { success, canceled, email, paymentId } = await searchParams;
+  const { success, canceled, email, paymentId, session_id } = await searchParams;
 
   const result = await getPublicEventView(slug);
 
@@ -39,6 +39,27 @@ export default async function EventPage({
 
   const { event, spotsTaken, spotsLeft, isFull } = result;
 
+  // Lookup payment by session_id if present (canonical booking identifier)
+  let bookingPayment = null;
+  if (session_id) {
+    bookingPayment = await prisma.payment.findFirst({
+      where: {
+        stripeCheckoutSessionId: session_id.trim(),
+        eventId: event.id,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        paidAt: true,
+        refundedAt: true,
+        amountPence: true,
+        amountPenceCaptured: true,
+      },
+    });
+  }
+
   // Check if event is closed
   const eventRecord = await prisma.event.findUnique({
     where: { id: event.id },
@@ -48,7 +69,7 @@ export default async function EventPage({
 
   // Determine status message
   let statusMessage: { type: "success" | "info" | "error"; text: string } | null = null;
-  if (success === "1") {
+  if (success === "1" || bookingPayment) {
     statusMessage = {
       type: "success",
       text: "You're in.",
@@ -154,7 +175,20 @@ export default async function EventPage({
             }}
           >
             {statusMessage.type === "success" ? (
-              <PaymentStatusPolling eventId={event.id} email={email} />
+              <PaymentStatusPolling 
+                eventId={event.id} 
+                email={bookingPayment?.email || email} 
+                payment={bookingPayment ? {
+                  id: bookingPayment.id,
+                  email: bookingPayment.email,
+                  name: bookingPayment.name,
+                  status: bookingPayment.status,
+                  paidAt: bookingPayment.paidAt,
+                  refundedAt: bookingPayment.refundedAt,
+                  amountPence: bookingPayment.amountPence,
+                  amountPenceCaptured: bookingPayment.amountPenceCaptured,
+                } : null}
+              />
             ) : (
               <p className="text-sm" style={{ 
                 color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
@@ -165,8 +199,8 @@ export default async function EventPage({
           </div>
         )}
 
-        {/* Join Card - Hide if user has already joined (success state) */}
-        {!isClosed && !isFull && statusMessage?.type !== "success" && (
+        {/* Join Card - Hide if user has already joined (success state) or has valid booking */}
+        {!isClosed && !isFull && statusMessage?.type !== "success" && !bookingPayment && (
           <div className="card">
             <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
           </div>
