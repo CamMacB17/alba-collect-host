@@ -179,8 +179,12 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          // Send notification email to organiser if email exists
-          if (payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0) {
+          // Send notification email to organiser if email exists and not already sent (idempotent)
+          if (
+            payment.event.organiserEmail &&
+            payment.event.organiserEmail.trim().length > 0 &&
+            !payment.organiserNotificationSentAt
+          ) {
             try {
               // Count current spots filled (PAID + PLEDGED)
               const spotsFilled = await prisma.payment.count({
@@ -212,8 +216,15 @@ Amount paid: ${priceDisplay}
 
 ${spotsDisplay}`,
               });
+
+              // Mark organiser notification email as sent (only after successful send)
+              await prisma.payment.update({
+                where: { id: paymentId },
+                data: { organiserNotificationSentAt: new Date() },
+              });
             } catch (emailErr) {
               // Log email error but don't fail the webhook
+              // Do NOT set organiserNotificationSentAt if send fails (allows retry)
               console.error("[webhook] Failed to send organiser notification email", {
                 paymentId,
                 organiserEmail: payment.event.organiserEmail,

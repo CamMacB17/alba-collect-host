@@ -42,22 +42,23 @@ model Event {
 }
 
 model Payment {
-  id                      String        @id @default(cuid())
-  eventId                 String
-  name                    String
-  email                   String
-  amountPence             Int
-  status                  PaymentStatus @default(PLEDGED)
-  createdAt               DateTime      @default(now())
-  stripeCheckoutSessionId String?
-  stripePaymentIntentId   String?
-  paidAt                  DateTime?
-  amountPenceCaptured     Int?
-  refundedAt              DateTime?
-  stripeRefundId          String?
-  receiptEmailSentAt      DateTime?
-  refundEmailSentAt       DateTime?
-  event                   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id                         String        @id @default(cuid())
+  eventId                    String
+  name                       String
+  email                      String
+  amountPence                Int
+  status                     PaymentStatus @default(PLEDGED)
+  createdAt                  DateTime      @default(now())
+  stripeCheckoutSessionId    String?
+  stripePaymentIntentId      String?
+  paidAt                     DateTime?
+  amountPenceCaptured        Int?
+  refundedAt                 DateTime?
+  stripeRefundId             String?
+  receiptEmailSentAt         DateTime?
+  refundEmailSentAt          DateTime?
+  organiserNotificationSentAt DateTime?
+  event                      Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, email])
 }
