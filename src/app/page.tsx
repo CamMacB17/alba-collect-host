@@ -51,7 +51,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-center justify-center gap-3">
                   <span className="font-semibold w-5 flex-shrink-0 leading-none" style={{ color: "var(--alba-yellow)" }}>✓</span>
-                  <span>Automatic attendance list with CSV export</span>
+                  <span>Attendance list with CSV export</span>
                 </li>
                 <li className="flex items-center justify-center gap-3">
                   <span className="font-semibold w-5 flex-shrink-0 leading-none" style={{ color: "var(--alba-yellow)" }}>✓</span>
