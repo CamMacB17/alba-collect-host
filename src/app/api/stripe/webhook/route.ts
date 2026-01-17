@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logger, generateCorrelationId } from "@/lib/logger";
+import { getRequiredEnv } from "@/lib/env";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 
@@ -21,11 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify webhook secret
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      logger.error("STRIPE_WEBHOOK_SECRET is not set", { correlationId });
-      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
-    }
+    const webhookSecret = getRequiredEnv("STRIPE_WEBHOOK_SECRET");
 
     // Verify signature and construct event
     const stripe = getStripe();

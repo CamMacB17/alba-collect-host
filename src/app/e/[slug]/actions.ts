@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { getRequiredEnv } from "@/lib/env";
 
 export async function payAndJoin(args: { slug: string; name: string; email: string }): Promise<{ checkoutUrl: string } | { error: string }> {
   const { slug, name, email } = args;
@@ -95,12 +96,7 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
     throw err;
   }
 
-  // Check APP_URL environment variable
-  if (!process.env.APP_URL) {
-    return { error: "APP_URL environment variable is required" };
-  }
-
-  const appUrl = process.env.APP_URL.trim().replace(/\/$/, ""); // strip trailing slash
+  const appUrl = getRequiredEnv("APP_URL").replace(/\/$/, ""); // strip trailing slash
 
   // Create Stripe Checkout Session
   const stripe = getStripe();

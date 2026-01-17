@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cleanupPledges } from "@/lib/cleanupPledges";
+import { getRequiredEnv } from "@/lib/env";
 
 async function handleCleanup(req: NextRequest): Promise<NextResponse> {
-  const expectedSecret = process.env.CRON_SECRET;
+  const expectedSecret = getRequiredEnv("CRON_SECRET");
 
   // Try to get secret from header (POST) or query param (GET)
   const secret = req.headers.get("x-cron-secret") || new URL(req.url).searchParams.get("secret");
