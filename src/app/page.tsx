@@ -44,17 +44,17 @@ export default function Home() {
 
             {/* Feature list - centered */}
             <div className="mb-8 w-full">
-              <ul className="mx-auto w-fit text-left space-y-2.5 text-sm sm:text-base">
-                <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
+              <ul className="mx-auto w-fit text-center space-y-2.5 text-sm sm:text-base">
+                <li className="flex items-center justify-center gap-3">
+                  <span className="font-semibold w-5 flex-shrink-0 leading-none" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Pay to join via Stripe</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
+                <li className="flex items-center justify-center gap-3">
+                  <span className="font-semibold w-5 flex-shrink-0 leading-none" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Automatic attendance list with CSV export</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
+                <li className="flex items-center justify-center gap-3">
+                  <span className="font-semibold w-5 flex-shrink-0 leading-none" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Refund controls and audit log</span>
                 </li>
               </ul>
