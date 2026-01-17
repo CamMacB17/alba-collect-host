@@ -4,17 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type PaymentStatusPollingProps = {
-  paymentId?: string;
+  eventId: string;
   email?: string;
 };
 
-export default function PaymentStatusPolling({ paymentId, email }: PaymentStatusPollingProps) {
-  const [status, setStatus] = useState<"PLEDGED" | "PAID" | "CANCELLED" | null>(null);
+export default function PaymentStatusPolling({ eventId, email }: PaymentStatusPollingProps) {
+  const [status, setStatus] = useState<"PLEDGED" | "PAID" | "CANCELLED" | "NONE" | null>(null);
   const [polling, setPolling] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!paymentId || !polling) return;
+    if (!eventId || !email || !polling) return;
 
     let pollCount = 0;
     const maxPolls = 15; // 15 polls * 2s = 30 seconds max
@@ -23,7 +23,7 @@ export default function PaymentStatusPolling({ paymentId, email }: PaymentStatus
 
     const checkStatus = async () => {
       try {
-        const response = await fetch(`/api/payment-status?paymentId=${encodeURIComponent(paymentId)}`);
+        const response = await fetch(`/api/payment-status?eventId=${encodeURIComponent(eventId)}&email=${encodeURIComponent(email)}`);
         if (!response.ok) {
           pollCount++;
           if (pollCount >= maxPolls) {
@@ -43,7 +43,15 @@ export default function PaymentStatusPolling({ paymentId, email }: PaymentStatus
           setStatus("CANCELLED");
           setPolling(false);
           if (intervalId) clearInterval(intervalId);
+        } else if (data.status === "NONE") {
+          // No payment found yet, continue polling
+          pollCount++;
+          if (pollCount >= maxPolls) {
+            setPolling(false);
+            if (intervalId) clearInterval(intervalId);
+          }
         } else {
+          // PLEDGED or other status, continue polling
           pollCount++;
           if (pollCount >= maxPolls) {
             setPolling(false);
@@ -75,7 +83,7 @@ export default function PaymentStatusPolling({ paymentId, email }: PaymentStatus
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [paymentId, polling, router]);
+  }, [eventId, email, polling, router]);
 
   // Confirmed state (PAID)
   if (status === "PAID") {

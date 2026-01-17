@@ -154,7 +154,7 @@ export default async function EventPage({
             }}
           >
             {statusMessage.type === "success" ? (
-              <PaymentStatusPolling paymentId={paymentId} email={email} />
+              <PaymentStatusPolling eventId={event.id} email={email} />
             ) : (
               <p className="text-sm" style={{ 
                 color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
