@@ -18,18 +18,7 @@ export default function MarkPaidButton({ paymentId, token }: { paymentId: string
   return (
     <button
       onClick={handleMarkPaid}
-      className="px-3 py-1 text-sm rounded-lg transition-all"
-      style={{
-        background: "rgba(251, 185, 36, 0.2)",
-        border: "1px solid #FBB924",
-        color: "#FBB924"
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(251, 185, 36, 0.3)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(251, 185, 36, 0.2)";
-      }}
+      className="badge badge-warning px-3 py-1 text-sm cursor-pointer hover:opacity-80 transition-opacity"
     >
       Mark paid
     </button>

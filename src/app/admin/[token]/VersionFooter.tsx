@@ -30,7 +30,7 @@ export default function VersionFooter() {
 
   return (
     <div className="mt-8 pt-4 text-center">
-      <p className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>
+      <p className="text-xs opacity-50">
         Version: {version}
       </p>
     </div>

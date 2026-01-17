@@ -27,28 +27,11 @@ export default function EditTitleForm({ eventId, currentTitle, token }: { eventI
           name="title"
           defaultValue={currentTitle}
           required
-          className="w-full sm:flex-1 px-3 py-2 rounded text-sm font-medium transition-all min-w-0"
-          style={{
-            background: "#2C2C2F",
-            border: "1px solid #404043",
-            color: "#FFFFE0"
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = "#F78222";
-            e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = "#404043";
-            e.target.style.boxShadow = "none";
-          }}
+          className="w-full sm:flex-1 text-sm font-medium min-w-0"
         />
         <button
           type="submit"
-          className="w-full sm:w-auto px-3 py-2 rounded text-xs font-medium transition-colors whitespace-nowrap"
-          style={{
-            background: "#10b981",
-            color: "white"
-          }}
+          className="btn-success w-full sm:w-auto px-3 py-2 text-xs whitespace-nowrap"
         >
           Save
         </button>

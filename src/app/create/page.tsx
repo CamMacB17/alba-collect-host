@@ -126,7 +126,7 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="min-h-screen py-6 md:py-8 px-4 sm:px-6 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
+    <main className="min-h-screen py-6 md:py-8 px-4 sm:px-6 overflow-x-hidden">
       <div className="w-full max-w-4xl mx-auto space-y-4">
         {/* Success Section - RENDERED ABOVE FORM */}
         {result && (
@@ -140,17 +140,17 @@ export default function CreatePage() {
             }}
           >
             <div className="flex items-start gap-3 mb-6">
-              <div className="text-2xl">✓</div>
+              <div className="text-2xl" style={{ color: "var(--alba-green)" }}>✓</div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-1" style={{ color: "#10b981" }}>Event Created</h2>
-                <p className="text-sm" style={{ color: "#FFFFE0", opacity: 0.8 }}>
+                <h2 className="text-xl font-semibold mb-1" style={{ color: "var(--alba-green)" }}>Event Created</h2>
+                <p className="text-sm opacity-80">
                   Your event is ready. Share these links with your guests.
                 </p>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>Event URL</label>
+                <label className="block text-sm font-medium mb-2 opacity-80">Event URL</label>
                 <div className="flex gap-2">
                   <a
                     href={result.eventUrl}
@@ -158,34 +158,29 @@ export default function CreatePage() {
                     rel="noopener noreferrer"
                     className="flex-1 px-4 py-2.5 rounded-lg truncate transition-all"
                     style={{
-                      background: "#2C2C2F",
-                      border: "1px solid #404043",
-                      color: "#F78222"
+                      background: "var(--alba-bg)",
+                      border: "1px solid var(--alba-border)",
+                      color: "var(--alba-accent)"
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#F78222";
+                      e.currentTarget.style.borderColor = "var(--alba-accent)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#404043";
+                      e.currentTarget.style.borderColor = "var(--alba-border)";
                     }}
                   >
                     {result.eventUrl}
                   </a>
                   <button
                     onClick={() => copyToClipboard(window.location.origin + result.eventUrl, "event")}
-                    className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-                    style={{
-                      background: copied === "event" ? "#10b981" : "#363639",
-                      border: "1px solid #404043",
-                      color: copied === "event" ? "white" : "#FFFFE0"
-                    }}
+                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${copied === "event" ? "btn-success" : "btn-secondary"}`}
                   >
                     {copied === "event" ? "Copied" : "Copy"}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#FFFFE0", opacity: 0.9 }}>Admin URL</label>
+                <label className="block text-sm font-medium mb-2 opacity-80">Admin URL</label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <a
                     href={result.adminUrl}
@@ -193,27 +188,22 @@ export default function CreatePage() {
                     rel="noopener noreferrer"
                     className="flex-1 min-w-0 px-4 py-2.5 rounded-lg truncate transition-all"
                     style={{
-                      background: "#2C2C2F",
-                      border: "1px solid #404043",
-                      color: "#F78222"
+                      background: "var(--alba-bg)",
+                      border: "1px solid var(--alba-border)",
+                      color: "var(--alba-accent)"
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#F78222";
+                      e.currentTarget.style.borderColor = "var(--alba-accent)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#404043";
+                      e.currentTarget.style.borderColor = "var(--alba-border)";
                     }}
                   >
                     {result.adminUrl}
                   </a>
                   <button
                     onClick={() => copyToClipboard(window.location.origin + result.adminUrl, "admin")}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-                    style={{
-                      background: copied === "admin" ? "#10b981" : "#363639",
-                      border: "1px solid #404043",
-                      color: copied === "admin" ? "white" : "#FFFFE0"
-                    }}
+                    className={`w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${copied === "admin" ? "btn-success" : "btn-secondary"}`}
                   >
                     {copied === "admin" ? "Copied" : "Copy"}
                   </button>
@@ -233,7 +223,7 @@ export default function CreatePage() {
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* Event Title */}
             <div>
-              <label htmlFor="title" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="title" className="block text-xs font-medium mb-1.5 opacity-80">
                 Event Title *
               </label>
               <input
@@ -241,26 +231,13 @@ export default function CreatePage() {
                 id="title"
                 name="title"
                 required
-                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full"
               />
             </div>
 
             {/* Price per person */}
             <div>
-              <label htmlFor="price" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="price" className="block text-xs font-medium mb-1.5 opacity-80">
                 Price per person (£) *
               </label>
               <input
@@ -271,26 +248,13 @@ export default function CreatePage() {
                 step="0.01"
                 min="0"
                 required
-                className="w-full px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full tabular-nums"
               />
             </div>
 
             {/* Max Spots */}
             <div>
-              <label htmlFor="maxSpots" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="maxSpots" className="block text-xs font-medium mb-1.5 opacity-80">
                 Max Spots *
               </label>
               <input
@@ -299,26 +263,13 @@ export default function CreatePage() {
                 name="maxSpots"
                 min="1"
                 required
-                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full"
               />
             </div>
 
             {/* Total cost + Split total button */}
             <div>
-              <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5 opacity-80">
                 Total cost (£) (optional)
               </label>
               <div className="flex flex-col md:flex-row gap-2">
@@ -330,36 +281,12 @@ export default function CreatePage() {
                   min="0"
                   value={totalCost}
                   onChange={(e) => setTotalCost(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg transition-all text-sm tabular-nums"
-                  style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#F78222";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#404043";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="flex-1 tabular-nums"
                 />
                 <button
                   type="button"
                   onClick={handleSplitTotal}
-                  className="px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all md:w-auto"
-                  style={{
-                    background: "#363639",
-                    border: "1px solid #404043",
-                    color: "#FFFFE0"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#404043";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#363639";
-                  }}
+                  className="btn-secondary px-3 py-2 text-xs whitespace-nowrap md:w-auto"
                 >
                   Split total
                 </button>
@@ -368,7 +295,7 @@ export default function CreatePage() {
 
             {/* Organiser Name */}
             <div>
-              <label htmlFor="organiserName" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="organiserName" className="block text-xs font-medium mb-1.5 opacity-80">
                 Organiser Name *
               </label>
               <input
@@ -376,46 +303,20 @@ export default function CreatePage() {
                 id="organiserName"
                 name="organiserName"
                 required
-                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full"
               />
             </div>
 
             {/* Organiser Email */}
             <div>
-              <label htmlFor="organiserEmail" className="block text-xs font-medium mb-1.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+              <label htmlFor="organiserEmail" className="block text-xs font-medium mb-1.5 opacity-80">
                 Organiser Email
               </label>
               <input
                 type="email"
                 id="organiserEmail"
                 name="organiserEmail"
-                className="w-full px-3 py-2 rounded-lg transition-all text-sm"
-                style={{
-                  background: "#2C2C2F",
-                  border: "1px solid #404043",
-                  color: "#FFFFE0"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#F78222";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#404043";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full"
               />
             </div>
 
@@ -424,21 +325,7 @@ export default function CreatePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2 px-4 rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: loading ? "#404043" : "#F78222",
-                  color: "white"
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = "#e6731f";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = "#F78222";
-                  }
-                }}
+                className="btn-primary w-full py-2.5"
               >
                 {loading ? "Creating..." : "Create Event"}
               </button>
@@ -446,8 +333,8 @@ export default function CreatePage() {
           </form>
 
           {error && (
-            <div className="mt-4 p-3 rounded-lg" style={{ background: "rgba(226, 54, 66, 0.15)", border: "1px solid #E23642" }}>
-              <p className="text-sm" style={{ color: "#E23642" }}>{error}</p>
+            <div className="mt-4 alert alert-error">
+              <p className="text-sm">{error}</p>
             </div>
           )}
         </div>

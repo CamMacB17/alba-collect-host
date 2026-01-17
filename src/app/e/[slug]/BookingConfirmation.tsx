@@ -55,11 +55,8 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
 
   if (loading) {
     return (
-      <div className="p-3 rounded border" style={{
-        background: "rgba(16, 185, 129, 0.15)",
-        borderColor: "#10b981"
-      }}>
-        <p className="text-sm" style={{ color: "#FFFFE0" }}>
+      <div className="alert alert-success">
+        <p className="text-sm">
           Loading booking...
         </p>
       </div>
@@ -80,24 +77,21 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
       : null;
 
     return (
-      <div className="p-3 rounded border" style={{
-        background: "rgba(16, 185, 129, 0.15)",
-        borderColor: "#10b981"
-      }}>
-        <h2 className="text-base font-semibold mb-1" style={{ color: "#10b981" }}>
+      <div className="alert alert-success">
+        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
           You're in.
         </h2>
         {booking.payment.email && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Paid as: {booking.payment.email}
           </p>
         )}
         {amountDisplay && paidDate && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Paid {amountDisplay} on {paidDate}
           </p>
         )}
-        <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+        <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
       </div>
@@ -107,22 +101,19 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
   // PLEDGED status
   if (booking.status === "PLEDGED" && booking.payment) {
     return (
-      <div className="p-3 rounded border" style={{
-        background: "rgba(16, 185, 129, 0.15)",
-        borderColor: "#10b981"
-      }}>
-        <h2 className="text-base font-semibold mb-1" style={{ color: "#10b981" }}>
+      <div className="alert alert-success">
+        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
           You're in.
         </h2>
-        <p className="mb-1 text-xs" style={{ color: "#FFFFE0" }}>
+        <p className="mb-1 text-xs">
           Confirming payment… If this hasn't updated in 30 seconds, refresh.
         </p>
         {booking.payment.email && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Paid as: {booking.payment.email}
           </p>
         )}
-        <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+        <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
       </div>
@@ -136,20 +127,17 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
       : null;
 
     return (
-      <div className="p-3 rounded border" style={{
-        background: "rgba(226, 54, 66, 0.15)",
-        borderColor: "#E23642"
-      }}>
-        <h2 className="text-base font-semibold mb-1" style={{ color: "#E23642" }}>
+      <div className="alert alert-error">
+        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-red)" }}>
           {booking.status === "REFUNDED" ? "Refunded" : "Cancelled"}
         </h2>
         {booking.payment.email && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             {booking.status === "REFUNDED" ? "Refunded for" : "Cancelled for"}: {booking.payment.email}
           </p>
         )}
         {refundDate && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+          <p className="text-xs mt-1 opacity-60">
             {booking.status === "REFUNDED" ? "Refunded" : "Cancelled"} on {refundDate}
           </p>
         )}

@@ -32,21 +32,7 @@ export default function CloseReopenButton({ eventId, token, isClosed }: { eventI
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-      style={{
-        background: isClosed ? "#FBB924" : "#E23642",
-        color: "white"
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-1px)";
-        e.currentTarget.style.boxShadow = isClosed 
-          ? "0 4px 12px rgba(251, 185, 36, 0.3)"
-          : "0 4px 12px rgba(226, 54, 66, 0.3)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
+      className={isClosed ? "btn-success px-4 py-2 text-sm font-medium" : "btn-danger px-4 py-2 text-sm font-medium"}
     >
       {isClosed ? "Reopen event" : "Close event"}
     </button>

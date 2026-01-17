@@ -50,11 +50,11 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   if (!adminToken || isExpired) {
     // Do not reveal whether token is invalid or expired (no information leakage)
     return (
-      <main className="min-h-screen p-4 sm:p-6" style={{ background: "#2C2C2F" }}>
+      <main className="min-h-screen p-4 sm:p-6">
         <div className="max-w-6xl mx-auto">
           <div className="card">
-            <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Admin link not found</h1>
-            <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The admin token you're using is invalid or has expired.</p>
+            <h1 className="text-xl font-semibold mb-2" style={{ color: "var(--alba-red)" }}>Admin link not found</h1>
+            <p className="opacity-80">The admin token you're using is invalid or has expired.</p>
           </div>
         </div>
       </main>
@@ -68,11 +68,11 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
   if (!event) {
     return (
-      <main className="min-h-screen p-4 sm:p-6" style={{ background: "#2C2C2F" }}>
+      <main className="min-h-screen p-4 sm:p-6">
         <div className="max-w-6xl mx-auto">
           <div className="card">
-            <h1 className="text-xl font-semibold mb-2" style={{ color: "#E23642" }}>Event not found</h1>
-            <p style={{ color: "#FFFFE0", opacity: 0.8 }}>The event associated with this admin link could not be found.</p>
+            <h1 className="text-xl font-semibold mb-2" style={{ color: "var(--alba-red)" }}>Event not found</h1>
+            <p className="opacity-80">The event associated with this admin link could not be found.</p>
           </div>
         </div>
       </main>
@@ -186,45 +186,38 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   });
 
   return (
-    <main className="min-h-screen p-3 sm:p-4 overflow-x-hidden" style={{ background: "#2C2C2F" }}>
+    <main className="min-h-screen p-3 sm:p-4 overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto space-y-3">
         {/* Header Section - Mobile: title full width, stats underneath */}
         <div className="card">
           <div className="mb-3">
-            <h1 className="text-lg sm:text-xl font-semibold mb-2" style={{ color: "#FFFFE0" }}>{event.title}</h1>
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-              style={{
-                background: isClosed ? "rgba(226, 54, 66, 0.15)" : "rgba(251, 185, 36, 0.15)",
-                color: isClosed ? "#E23642" : "#FBB924",
-                border: `1px solid ${isClosed ? "#E23642" : "#FBB924"}`,
-              }}
-            >
+            <h1 className="text-lg sm:text-xl font-semibold mb-2">{event.title}</h1>
+            <span className={isClosed ? "badge badge-error" : "badge badge-warning"}>
               {isClosed ? "Closed" : "Open"}
             </span>
           </div>
           {/* Key Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="text-center">
-              <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Price</div>
-              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "#FBB924" }}>{priceDisplay}</div>
+              <div className="text-label mb-0.5">Price</div>
+              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "var(--alba-yellow)" }}>{priceDisplay}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Spots</div>
-              <div className="text-sm sm:text-base font-semibold" style={{ color: "#FFFFE0" }}>
+              <div className="text-label mb-0.5">Spots</div>
+              <div className="text-sm sm:text-base font-semibold">
                 {spotsTaken}
                 {event.maxSpots !== null ? `/${event.maxSpots}` : "∞"}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Revenue</div>
-              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "#FBB924" }}>
+              <div className="text-label mb-0.5">Revenue</div>
+              <div className="text-sm sm:text-base font-semibold tabular-nums" style={{ color: "var(--alba-yellow)" }}>
                 £{(totalPaidRevenue / 100).toFixed(0)}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs mb-0.5 uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.5 }}>Count</div>
-              <div className="text-sm sm:text-base font-semibold" style={{ color: "#FFFFE0" }}>{totalPayments}</div>
+              <div className="text-label mb-0.5">Count</div>
+              <div className="text-sm sm:text-base font-semibold">{totalPayments}</div>
             </div>
           </div>
         </div>
@@ -235,12 +228,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           <div className="space-y-3">
             {/* Event Settings */}
             <div className="card">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: "#FFFFE0" }}>Event Settings</h2>
+              <h2 className="text-sm font-semibold mb-3">Event Settings</h2>
               
               <div className="space-y-3">
                 {/* Title with inline Save */}
                 <div>
-                  <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Event Title</label>
+                  <label className="block text-xs font-medium mb-1 opacity-80">Event Title</label>
                   <EditTitleForm eventId={event.id} currentTitle={event.title} token={token} />
                 </div>
 
@@ -248,13 +241,13 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Price with inline Save */}
                   <div>
-                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Price per person (£)</label>
+                    <label className="block text-xs font-medium mb-1 opacity-80">Price per person (£)</label>
                     <EditPriceForm eventId={event.id} currentPricePence={event.pricePence} token={token} isPriceLocked={paidCount > 0} />
                   </div>
                   
                   {/* Max Spots with inline Save */}
                   <div>
-                    <label className="block text-xs font-medium mb-1" style={{ color: "#FFFFE0", opacity: 0.8 }}>Max spots</label>
+                    <label className="block text-xs font-medium mb-1 opacity-80">Max spots</label>
                     <EditMaxSpotsForm eventId={event.id} currentMaxSpots={event.maxSpots} token={token} />
                   </div>
                 </div>
@@ -263,25 +256,25 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
             {/* Event Links */}
             <div className="card">
-              <h2 className="text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Event Links</h2>
+              <h2 className="text-sm font-semibold mb-2">Event Links</h2>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium w-16 flex-shrink-0" style={{ color: "#FFFFE0", opacity: 0.6 }}>Public</span>
+                  <span className="text-xs font-medium w-16 flex-shrink-0 opacity-60">Public</span>
                   <code className="flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-mono truncate" style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#F78222"
+                    background: "var(--alba-bg)",
+                    border: "1px solid var(--alba-border)",
+                    color: "var(--alba-accent)"
                   }}>
                     {publicUrl}
                   </code>
                   <CopyButton text={publicUrl} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium w-16 flex-shrink-0" style={{ color: "#FFFFE0", opacity: 0.6 }}>Admin</span>
+                  <span className="text-xs font-medium w-16 flex-shrink-0 opacity-60">Admin</span>
                   <code className="flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-mono truncate" style={{
-                    background: "#2C2C2F",
-                    border: "1px solid #404043",
-                    color: "#F78222"
+                    background: "var(--alba-bg)",
+                    border: "1px solid var(--alba-border)",
+                    color: "var(--alba-accent)"
                   }}>
                     {adminUrl}
                   </code>
@@ -297,9 +290,9 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
 
             {/* Recent Actions */}
             <div className="card">
-              <h2 className="text-sm font-semibold mb-2" style={{ color: "#FFFFE0" }}>Recent Actions</h2>
+              <h2 className="text-sm font-semibold mb-2">Recent Actions</h2>
               {actionLogs.length === 0 ? (
-                <p className="text-xs py-2" style={{ color: "#FFFFE0", opacity: 0.6 }}>No actions logged yet</p>
+                <p className="text-xs py-2 opacity-60">No actions logged yet</p>
               ) : (
                 <div className="space-y-1">
                   {actionLogs.map((log) => {
@@ -318,14 +311,14 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
                     }
 
                     return (
-                      <div key={log.id} className="flex items-start justify-between py-1" style={{ borderBottom: "1px solid #404043" }}>
+                      <div key={log.id} className="flex items-start justify-between py-1" style={{ borderBottom: "1px solid var(--alba-border)" }}>
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs font-medium" style={{ color: "#FFFFE0" }}>{log.actionType.replace(/_/g, " ")}</span>
+                          <span className="text-xs font-medium">{log.actionType.replace(/_/g, " ")}</span>
                           {summary && (
-                            <span className="text-xs ml-1.5" style={{ color: "#FFFFE0", opacity: 0.6 }}>— {summary}</span>
+                            <span className="text-xs ml-1.5 opacity-60">— {summary}</span>
                           )}
                         </div>
-                        <span className="text-xs whitespace-nowrap ml-2 flex-shrink-0" style={{ color: "#FFFFE0", opacity: 0.5 }}>
+                        <span className="text-xs whitespace-nowrap ml-2 flex-shrink-0 opacity-50">
                           {log.createdAt ? formatDate(log.createdAt) : "—"}
                         </span>
                       </div>
@@ -340,25 +333,21 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
           <div className="space-y-3">
             {/* Actions Card */}
             <div className="card">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: "#FFFFE0" }}>Actions</h2>
+              <h2 className="text-sm font-semibold mb-3">Actions</h2>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-medium mb-0.5" style={{ color: "#FFFFE0", opacity: 0.9 }}>Event Status</div>
-                    <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                    <div className="text-xs font-medium mb-0.5 opacity-80">Event Status</div>
+                    <div className="text-xs opacity-60">
                       {isClosed ? "Closed" : "Open"}
                     </div>
                   </div>
                   <CloseReopenButton eventId={event.id} token={token} isClosed={isClosed} />
                 </div>
-                <div className="pt-2" style={{ borderTop: "1px solid #404043" }}>
+                <div className="pt-2" style={{ borderTop: "1px solid var(--alba-border)" }}>
                   <a
                     href={`/admin/${token}/export`}
-                    className="block w-full px-3 py-2 rounded text-sm font-medium text-center transition-colors"
-                    style={{
-                      background: "#F78222",
-                      color: "white"
-                    }}
+                    className="btn-primary block w-full px-3 py-2 text-sm font-medium text-center"
                   >
                     Download CSV
                   </a>
@@ -371,17 +360,17 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
               background: "rgba(226, 54, 66, 0.08)", 
               border: "1px solid rgba(226, 54, 66, 0.3)" 
             }}>
-              <h2 className="text-sm font-semibold mb-1.5" style={{ color: "#E23642" }}>Danger Zone</h2>
+              <h2 className="text-sm font-semibold mb-1.5" style={{ color: "var(--alba-red)" }}>Danger Zone</h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs mb-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                  <p className="text-xs mb-2 opacity-70">
                     Regenerate admin link. Current link will stop working immediately.
                   </p>
                   <RegenerateAdminLinkButton token={token} />
                 </div>
                 {paidCount > 0 && (
                   <div>
-                    <p className="text-xs mb-2" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                    <p className="text-xs mb-2 opacity-70">
                       Refund all paid payments. Cannot be undone.
                     </p>
                     <RefundAllButton token={token} />
@@ -393,69 +382,54 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
             {/* Attendees Table - Moved to Right Column */}
             <div className="card">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold" style={{ color: "#FFFFE0" }}>Attendees</h2>
+                <h2 className="text-sm font-semibold">Attendees</h2>
                 {sortedPayments.length > 0 && (
-                  <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                  <span className="text-xs opacity-60">
                     {sortedPayments.length} {sortedPayments.length === 1 ? "person" : "people"}
                   </span>
                 )}
               </div>
               {sortedPayments.length === 0 ? (
                 <div className="py-6 text-center">
-                  <p className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>No one has joined yet</p>
+                  <p className="text-xs opacity-60">No one has joined yet</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto -mx-3 px-3">
                   <table className="w-full">
                     <thead>
-                      <tr style={{ borderBottom: "1px solid #404043" }}>
-                        <th className="text-left py-2 px-2 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Name</th>
-                        <th className="text-left py-2 px-2 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Email</th>
-                        <th className="text-left py-2 px-2 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</th>
-                        <th className="text-left py-2 px-2 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Date</th>
-                        <th className="text-right py-2 px-2 text-xs font-medium uppercase tracking-wide" style={{ color: "#FFFFE0", opacity: 0.6 }}>Actions</th>
+                      <tr style={{ borderBottom: "1px solid var(--alba-border)" }}>
+                        <th className="text-left py-2 px-2 text-label">Name</th>
+                        <th className="text-left py-2 px-2 text-label">Email</th>
+                        <th className="text-left py-2 px-2 text-label">Status</th>
+                        <th className="text-left py-2 px-2 text-label">Date</th>
+                        <th className="text-right py-2 px-2 text-label">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sortedPayments.map((payment) => (
                         <tr 
                           key={payment.id} 
-                          style={{ borderBottom: "1px solid #404043" }}
+                          style={{ borderBottom: "1px solid var(--alba-border)" }}
                           className="hover:opacity-90 transition-opacity"
                         >
                           <td className="py-2 px-2">
-                            <div className="text-xs font-medium truncate" style={{ color: "#FFFFE0" }}>{payment.name || "—"}</div>
+                            <div className="text-xs font-medium truncate">{payment.name || "—"}</div>
                           </td>
                           <td className="py-2 px-2">
-                            <div className="text-xs truncate" style={{ color: "#FFFFE0", opacity: 0.8 }}>{payment.email || "—"}</div>
+                            <div className="text-xs truncate opacity-80">{payment.email || "—"}</div>
                           </td>
                           <td className="py-2 px-2">
                             <div className="flex items-center gap-1.5">
-                              <span
-                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
-                                style={{
-                                  background: payment.status === "PAID" 
-                                    ? "rgba(251, 185, 36, 0.2)" 
-                                    : payment.status === "PLEDGED"
-                                    ? "rgba(251, 185, 36, 0.15)"
-                                    : "rgba(255, 255, 224, 0.1)",
-                                  color: payment.status === "PAID"
-                                    ? "#FBB924"
-                                    : payment.status === "PLEDGED"
-                                    ? "#FBB924"
-                                    : "#FFFFE0",
-                                  opacity: payment.status === "CANCELLED" ? 0.7 : 1
-                                }}
-                              >
+                              <span className={payment.status === "PAID" || payment.status === "PLEDGED" ? "badge badge-warning" : "badge badge-neutral"}>
                                 {payment.status}
                               </span>
                               {payment.status === "CANCELLED" && (payment.refundedAt !== null || payment.stripeRefundId !== null) && (
-                                <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.5 }}>Refunded</span>
+                                <span className="text-xs opacity-50">Refunded</span>
                               )}
                             </div>
                           </td>
                           <td className="py-2 px-2">
-                            <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+                            <div className="text-xs opacity-60">
                               {payment.paidAt ? formatDate(payment.paidAt) : payment.refundedAt ? formatDate(payment.refundedAt) : payment.createdAt ? formatDate(payment.createdAt) : "—"}
                             </div>
                           </td>

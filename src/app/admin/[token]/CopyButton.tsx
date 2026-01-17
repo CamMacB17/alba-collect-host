@@ -21,12 +21,7 @@ export default function CopyButton({ text, label = "Copy" }: { text: string; lab
   return (
     <button
       onClick={handleClick}
-      className="px-2.5 py-1.5 text-xs rounded font-medium transition-colors whitespace-nowrap"
-      style={{
-        background: copied ? "#10b981" : "#333338",
-        border: "1px solid #404043",
-        color: copied ? "white" : "#FFFFE0"
-      }}
+      className={`px-2.5 py-1.5 text-xs rounded font-medium transition-colors whitespace-nowrap ${copied ? "btn-success" : "btn-secondary"}`}
     >
       {copied ? "Copied" : label}
     </button>

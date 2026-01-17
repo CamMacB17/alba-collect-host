@@ -34,7 +34,7 @@ export default function RefundButton({ paymentId, token, isAlreadyRefunded }: { 
   if (isAlreadyRefunded) {
     return (
       <div className="flex flex-col items-end gap-1">
-        <span className="text-sm" style={{ color: "#FFFFE0", opacity: 0.6 }}>Refunded</span>
+        <span className="text-sm opacity-60">Refunded</span>
       </div>
     );
   }
@@ -44,29 +44,11 @@ export default function RefundButton({ paymentId, token, isAlreadyRefunded }: { 
       <button
         onClick={handleRefund}
         disabled={isLoading || isAlreadyRefunded}
-        className="px-3 py-1 text-sm rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{
-          background: isLoading ? "#404043" : "#F78222",
-          color: "white"
-        }}
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#e6731f";
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 12px rgba(247, 130, 34, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#F78222";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "none";
-          }
-        }}
+        className="btn-primary px-3 py-1 text-sm"
       >
         {isLoading ? "Refunding..." : "Refund"}
       </button>
-      {error && <span className="text-xs" style={{ color: "#E23642" }}>{error}</span>}
+      {error && <span className="text-xs" style={{ color: "var(--alba-red)" }}>{error}</span>}
     </div>
   );
 }

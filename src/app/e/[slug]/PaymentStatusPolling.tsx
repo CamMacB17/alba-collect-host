@@ -124,65 +124,65 @@ export default function PaymentStatusPolling({ eventId, email, payment }: Paymen
       : null;
 
     return (
-      <>
-        <h2 className="text-base font-semibold mb-1" style={{ color: "#10b981" }}>
+      <div className="alert alert-success">
+        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
           You're in.
         </h2>
         {displayEmail && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Paid as: {displayEmail}
           </p>
         )}
         {amountDisplay && paidDate && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Paid {amountDisplay} on {paidDate}
           </p>
         )}
-        <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+        <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
-      </>
+      </div>
     );
   }
 
   // Refunded state
   if (displayStatus === "CANCELLED" && (payment?.refundedAt || payment)) {
     return (
-      <>
-        <h2 className="text-base font-semibold mb-1" style={{ color: "#FFFFE0" }}>
+      <div className="alert alert-error">
+        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-red)" }}>
           Refunded
         </h2>
         {displayEmail && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+          <p className="text-xs mt-1 opacity-70">
             Refunded for: {displayEmail}
           </p>
         )}
         {payment?.refundedAt && (
-          <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+          <p className="text-xs mt-1 opacity-60">
             Refunded on {new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(payment.refundedAt)}
           </p>
         )}
-      </>
+      </div>
     );
   }
 
   // Confirming state (still polling or PLEDGED)
   return (
-    <>
-      <h2 className="text-base font-semibold mb-1" style={{ color: "#10b981" }}>
+    <div className="alert alert-success">
+      <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
         You're in.
       </h2>
-      <p className="mb-1 text-xs" style={{ color: "#FFFFE0" }}>
+      <p className="mb-1 text-xs">
         Confirming payment… If this hasn't updated in 30 seconds, refresh.
       </p>
       {email && (
-        <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+        <p className="text-xs mt-1 opacity-70">
           Paid as: {email}
         </p>
       )}
-      <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+      <p className="text-xs mt-1 opacity-60">
         Stripe will email your receipt.
       </p>
-    </>
+    </div>
   );
 }

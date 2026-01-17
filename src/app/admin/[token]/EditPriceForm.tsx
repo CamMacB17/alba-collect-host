@@ -63,21 +63,14 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
     return (
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
-            style={{
-              background: "rgba(226, 54, 66, 0.15)",
-              color: "#E23642",
-              border: "1px solid rgba(226, 54, 66, 0.3)"
-            }}
-          >
+          <span className="badge badge-error">
             Locked
           </span>
-          <span className="text-sm font-medium" style={{ color: "#FFFFE0" }}>
+          <span className="text-sm font-medium">
             £{currentPricePounds || "0.00"}
           </span>
         </div>
-        <p className="text-xs" style={{ color: "#FFFFE0", opacity: 0.6 }}>
+        <p className="text-xs opacity-60">
           Price cannot be changed after the first payment
         </p>
       </div>
@@ -95,35 +88,18 @@ export default function EditPriceForm({ eventId, currentPricePence, token, isPri
             defaultValue={currentPricePounds ?? ""}
             placeholder="0.00"
             disabled={isPriceLocked}
-            className="w-full sm:flex-1 px-3 py-2 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm tabular-nums min-w-0"
-            style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#FFFFE0"
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#F78222";
-              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#404043";
-              e.target.style.boxShadow = "none";
-            }}
+            className="w-full sm:flex-1 text-sm tabular-nums min-w-0"
           />
           <button
             type="submit"
             disabled={isPriceLocked}
-            className="w-full sm:w-auto px-3 py-2 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            style={{
-              background: isPriceLocked ? "#404043" : "#10b981",
-              color: "white"
-            }}
+            className="btn-success w-full sm:w-auto px-3 py-2 text-xs whitespace-nowrap"
           >
             Save
           </button>
         </div>
         {error && (
-          <p className="text-xs" style={{ color: "#E23642" }}>{error}</p>
+          <p className="text-xs" style={{ color: "var(--alba-red)" }}>{error}</p>
         )}
       </div>
     </form>

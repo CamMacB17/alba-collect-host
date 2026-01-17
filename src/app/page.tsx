@@ -2,42 +2,40 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center" style={{ background: "#2C2C2F" }}>
+    <main className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-5xl mx-auto w-full">
         <div className="card">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2.5 leading-tight" style={{ color: "#FFFFE0" }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-3 leading-tight">
               Alba Host
             </h1>
             
-            <p className="text-base sm:text-lg mb-6 max-w-3xl mx-auto" style={{ color: "#FFFFE0", opacity: 0.9 }}>
+            <p className="text-base sm:text-lg mb-8 max-w-3xl mx-auto opacity-90">
               Collect payments for golf group events.
             </p>
 
             {/* How it works */}
             <div className="mb-6 w-full">
-              <h2 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "#FFFFE0", opacity: 0.7 }}>
-                How it works
-              </h2>
+              <h2 className="text-label mb-4">How it works</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                <div className="p-3 rounded-lg" style={{ background: "#2C2C2F" }}>
-                  <div className="text-xl font-semibold mb-1.5" style={{ color: "#F78222" }}>1</div>
-                  <div className="text-sm font-medium mb-1" style={{ color: "#FFFFE0" }}>Create event</div>
-                  <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                <div className="p-4 rounded-lg" style={{ background: "var(--alba-bg)" }}>
+                  <div className="text-xl font-semibold mb-2" style={{ color: "var(--alba-accent)" }}>1</div>
+                  <div className="text-sm font-medium mb-1">Create event</div>
+                  <div className="text-xs opacity-70">
                     Set price, spots, and organiser details
                   </div>
                 </div>
-                <div className="p-3 rounded-lg" style={{ background: "#2C2C2F" }}>
-                  <div className="text-xl font-semibold mb-1.5" style={{ color: "#F78222" }}>2</div>
-                  <div className="text-sm font-medium mb-1" style={{ color: "#FFFFE0" }}>Share link</div>
-                  <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                <div className="p-4 rounded-lg" style={{ background: "var(--alba-bg)" }}>
+                  <div className="text-xl font-semibold mb-2" style={{ color: "var(--alba-accent)" }}>2</div>
+                  <div className="text-sm font-medium mb-1">Share link</div>
+                  <div className="text-xs opacity-70">
                     Send the event link to your guests
                   </div>
                 </div>
-                <div className="p-3 rounded-lg" style={{ background: "#2C2C2F" }}>
-                  <div className="text-xl font-semibold mb-1.5" style={{ color: "#F78222" }}>3</div>
-                  <div className="text-sm font-medium mb-1" style={{ color: "#FFFFE0" }}>Guests pay</div>
-                  <div className="text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+                <div className="p-4 rounded-lg" style={{ background: "var(--alba-bg)" }}>
+                  <div className="text-xl font-semibold mb-2" style={{ color: "var(--alba-accent)" }}>3</div>
+                  <div className="text-sm font-medium mb-1">Guests pay</div>
+                  <div className="text-xs opacity-70">
                     Secure payments via Stripe checkout
                   </div>
                 </div>
@@ -45,35 +43,31 @@ export default function Home() {
             </div>
 
             {/* Feature list - centered */}
-            <div className="mb-6 w-full">
-              <ul className="mx-auto w-fit text-left space-y-2 text-sm sm:text-base" style={{ color: "#FFFFE0" }}>
+            <div className="mb-8 w-full">
+              <ul className="mx-auto w-fit text-left space-y-2.5 text-sm sm:text-base">
                 <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
+                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Pay to join via Stripe</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
+                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Automatic attendance list with CSV export</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "#FBB924" }}>✓</span>
+                  <span className="font-semibold w-5 flex-shrink-0" style={{ color: "var(--alba-yellow)" }}>✓</span>
                   <span>Refund controls and audit log</span>
                 </li>
               </ul>
             </div>
 
-            <div className="mb-5 text-xs sm:text-sm space-y-0.5 text-center" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+            <div className="mb-6 text-xs sm:text-sm space-y-0.5 text-center opacity-70">
               <p>No accounts needed for guests.</p>
               <p>You are marked paid only after Stripe confirms payment.</p>
             </div>
 
             <Link
               href="/create"
-              className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-all hover:opacity-90"
-              style={{ 
-                background: "#F78222",
-                color: "white"
-              }}
+              className="btn-primary inline-block px-6 sm:px-8 py-3 sm:py-3.5 text-base sm:text-lg font-semibold"
             >
               Create an event
             </Link>

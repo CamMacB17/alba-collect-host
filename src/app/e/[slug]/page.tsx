@@ -29,9 +29,9 @@ export default async function EventPage({
 
   if (!result || !result.event) {
     return (
-      <main className="min-h-screen p-8" style={{ background: "#2C2C2F" }}>
+      <main className="min-h-screen p-8">
         <div className="max-w-5xl mx-auto">
-          <p style={{ color: "#FFFFE0" }}>Event not found</p>
+          <p>Event not found</p>
         </div>
       </main>
     );
@@ -71,65 +71,47 @@ export default async function EventPage({
   }
 
   return (
-    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8" style={{ background: "#2C2C2F" }}>
+    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Event Header Card */}
         <div className="card">
-          <h1 className="text-2xl font-semibold mb-4" style={{ color: "#FFFFE0" }}>
+          <h1 className="text-2xl font-semibold mb-4">
             {event.title}
           </h1>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>Price</div>
-              <div className="text-xl font-semibold" style={{ color: "#FBB924" }}>
+              <div className="text-label mb-1.5">Price</div>
+              <div className="text-xl font-semibold" style={{ color: "var(--alba-yellow)" }}>
                 {event.price !== null ? formatPrice(event.price) : "Free"}
               </div>
             </div>
 
             {event.maxSpots !== null ? (
               <div>
-                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>Spots</div>
-                <div className="text-xl font-semibold" style={{ color: "#FFFFE0" }}>
+                <div className="text-label mb-1.5">Spots</div>
+                <div className="text-xl font-semibold">
                   {spotsLeft} of {event.maxSpots}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>Spots</div>
-                <div className="text-xl font-semibold" style={{ color: "#FFFFE0" }}>
+                <div className="text-label mb-1.5">Spots</div>
+                <div className="text-xl font-semibold">
                   Unlimited
                 </div>
               </div>
             )}
 
             <div>
-              <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "#FFFFE0", opacity: 0.6 }}>Status</div>
+              <div className="text-label mb-1.5">Status</div>
               <div>
                 {isClosed ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style={{
-                    background: "rgba(226, 54, 66, 0.15)",
-                    color: "#E23642",
-                    border: "1px solid rgba(226, 54, 66, 0.3)"
-                  }}>
-                    Closed
-                  </span>
+                  <span className="badge badge-error">Closed</span>
                 ) : isFull ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style={{
-                    background: "rgba(226, 54, 66, 0.15)",
-                    color: "#E23642",
-                    border: "1px solid rgba(226, 54, 66, 0.3)"
-                  }}>
-                    Full
-                  </span>
+                  <span className="badge badge-error">Full</span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style={{
-                    background: "rgba(251, 185, 36, 0.15)",
-                    color: "#FBB924",
-                    border: "1px solid rgba(251, 185, 36, 0.3)"
-                  }}>
-                    Open
-                  </span>
+                  <span className="badge badge-warning">Open</span>
                 )}
               </div>
             </div>
@@ -143,20 +125,8 @@ export default async function EventPage({
 
         {/* Status Messages (only when no session_id) */}
         {!hasSessionId && statusMessage && (
-          <div
-            className="p-3 rounded border"
-            style={{
-              background: statusMessage.type === "error"
-                ? "rgba(226, 54, 66, 0.15)"
-                : "rgba(247, 130, 34, 0.15)",
-              borderColor: statusMessage.type === "error"
-                ? "#E23642"
-                : "#F78222"
-            }}
-          >
-            <p className="text-sm" style={{ 
-              color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
-            }}>
+          <div className={statusMessage.type === "error" ? "alert alert-error" : "alert alert-info"}>
+            <p className="text-sm">
               {statusMessage.text}
             </p>
           </div>

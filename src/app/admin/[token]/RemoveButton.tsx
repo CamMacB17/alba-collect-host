@@ -20,18 +20,7 @@ export default function RemoveButton({ paymentId, token }: { paymentId: string; 
   return (
     <button
       onClick={handleRemove}
-      className="px-3 py-1 text-sm rounded-lg transition-all"
-      style={{
-        background: "rgba(226, 54, 66, 0.15)",
-        border: "1px solid #E23642",
-        color: "#E23642"
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(226, 54, 66, 0.25)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(226, 54, 66, 0.15)";
-      }}
+      className="badge badge-error px-3 py-1 text-sm cursor-pointer hover:opacity-80 transition-opacity"
     >
       Remove
     </button>

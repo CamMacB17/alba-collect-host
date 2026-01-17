@@ -32,30 +32,12 @@ export default function RefundAllButton({ token }: { token: string }) {
       <button
         onClick={handleRefundAll}
         disabled={isLoading}
-        className="px-4 py-2 text-sm rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{
-          background: isLoading ? "#404043" : "#E23642",
-          color: "white"
-        }}
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#c92e3a";
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 12px rgba(226, 54, 66, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#E23642";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "none";
-          }
-        }}
+        className="btn-danger px-4 py-2 text-sm font-medium w-full"
       >
         {isLoading ? "Refunding..." : "Refund all paid"}
       </button>
       {result && (
-        <span className="text-xs" style={{ color: "#FFFFE0", opacity: 0.7 }}>
+        <span className="text-xs opacity-70">
           Refunded {result.refunded}, skipped {result.skippedAlreadyRefunded}, failed {result.failed}
         </span>
       )}

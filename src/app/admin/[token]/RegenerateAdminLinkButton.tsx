@@ -40,41 +40,23 @@ export default function RegenerateAdminLinkButton({ token }: { token: string }) 
       <button
         onClick={handleRegenerate}
         disabled={isLoading}
-        className="px-4 py-2 text-sm rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{
-          background: isLoading ? "#404043" : "#E23642",
-          color: "white"
-        }}
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#c92e3a";
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 12px rgba(226, 54, 66, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.background = "#E23642";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "none";
-          }
-        }}
+        className="btn-danger px-4 py-2 text-sm font-medium w-full"
       >
         {isLoading ? "Regenerating..." : "Regenerate admin link"}
       </button>
       {error && (
-        <p className="text-xs" style={{ color: "#E23642" }}>
+        <p className="text-xs" style={{ color: "var(--alba-red)" }}>
           {error}
         </p>
       )}
       {newAdminUrl && (
-        <div className="mt-2 p-3 rounded" style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
-          <p className="text-xs mb-2 font-medium" style={{ color: "#10b981" }}>New admin link:</p>
+        <div className="mt-2 alert alert-success">
+          <p className="text-xs mb-2 font-medium" style={{ color: "var(--alba-green)" }}>New admin link:</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-mono truncate" style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#F78222"
+              background: "var(--alba-bg)",
+              border: "1px solid var(--alba-border)",
+              color: "var(--alba-accent)"
             }}>
               {newAdminUrl}
             </code>

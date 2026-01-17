@@ -35,34 +35,17 @@ export default function EditMaxSpotsForm({ eventId, currentMaxSpots, token }: { 
             min="1"
             defaultValue={currentMaxSpots ?? ""}
             placeholder="Unlimited"
-            className="w-full px-2.5 py-2 rounded transition-all text-sm min-w-0"
-            style={{
-              background: "#2C2C2F",
-              border: "1px solid #404043",
-              color: "#FFFFE0"
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#F78222";
-              e.target.style.boxShadow = "0 0 0 3px rgba(247, 130, 34, 0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#404043";
-              e.target.style.boxShadow = "none";
-            }}
+            className="w-full sm:flex-1 text-sm min-w-0"
           />
           <button
             type="submit"
-            className="w-full sm:w-auto px-3 py-2 rounded text-xs font-medium transition-colors whitespace-nowrap"
-            style={{
-              background: "#10b981",
-              color: "white"
-            }}
+            className="btn-success w-full sm:w-auto px-3 py-2 text-xs whitespace-nowrap"
           >
             Save
           </button>
         </div>
         {error && (
-          <p className="text-xs" style={{ color: "#E23642" }}>{error}</p>
+          <p className="text-xs" style={{ color: "var(--alba-red)" }}>{error}</p>
         )}
       </div>
     </form>

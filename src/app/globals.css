@@ -34,20 +34,28 @@ body {
 .card {
   background: var(--alba-card-bg);
   border: 1px solid var(--alba-border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 1.5rem;
+  }
 }
 
 /* Input styles */
 input[type="text"],
 input[type="email"],
 input[type="number"] {
-  background: #2C2C2F;
+  background: var(--alba-bg);
   border: 1px solid var(--alba-border);
   color: var(--alba-text);
   border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
 }
 
 input[type="text"]:focus,
@@ -58,20 +66,33 @@ input[type="number"]:focus {
   box-shadow: 0 0 0 3px rgba(247, 130, 34, 0.1);
 }
 
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+input[type="number"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Button styles */
 .btn-primary {
   background: var(--alba-accent);
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #e6731f;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-success {
@@ -79,14 +100,20 @@ input[type="number"]:focus {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled) {
   background: #059669;
+}
+
+.btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
@@ -94,15 +121,21 @@ input[type="number"]:focus {
   color: var(--alba-text);
   border: 1px solid var(--alba-border);
   border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: #3a3a3f;
   border-color: #505053;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-danger {
@@ -110,12 +143,109 @@ input[type="number"]:focus {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background: #c92e3a;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Badge/Status styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--alba-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background: rgba(251, 185, 36, 0.15);
+  color: var(--alba-yellow);
+  border: 1px solid rgba(251, 185, 36, 0.3);
+}
+
+.badge-error {
+  background: rgba(226, 54, 66, 0.15);
+  color: var(--alba-red);
+  border: 1px solid rgba(226, 54, 66, 0.3);
+}
+
+.badge-info {
+  background: rgba(247, 130, 34, 0.15);
+  color: var(--alba-accent);
+  border: 1px solid rgba(247, 130, 34, 0.3);
+}
+
+.badge-neutral {
+  background: rgba(255, 255, 224, 0.1);
+  color: var(--alba-text);
+  border: 1px solid var(--alba-border);
+  opacity: 0.7;
+}
+
+/* Alert/Message styles */
+.alert {
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--alba-green);
+  color: var(--alba-green);
+}
+
+.alert-error {
+  background: rgba(226, 54, 66, 0.15);
+  border-color: var(--alba-red);
+  color: var(--alba-red);
+}
+
+.alert-info {
+  background: rgba(247, 130, 34, 0.15);
+  border-color: var(--alba-accent);
+  color: var(--alba-text);
+}
+
+/* Typography utilities */
+.text-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--alba-text);
+  opacity: 0.6;
+}
+
+.text-body {
+  font-size: 0.875rem;
+  color: var(--alba-text);
+  line-height: 1.5;
+}
+
+.text-body-sm {
+  font-size: 0.75rem;
+  color: var(--alba-text);
+  line-height: 1.4;
+  opacity: 0.8;
 }
