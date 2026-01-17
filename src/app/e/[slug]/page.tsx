@@ -152,7 +152,7 @@ export default async function EventPage({
                   {statusMessage.text}
                 </h2>
                 <p className="mb-1 text-xs" style={{ color: "#FFFFE0" }}>
-                  Thanks for your payment. You're confirmed for this event.
+                  Confirming payment… If this hasn't updated in 30 seconds, refresh.
                 </p>
                 {email && (
                   <p className="text-xs mt-1" style={{ color: "#FFFFE0", opacity: 0.7 }}>

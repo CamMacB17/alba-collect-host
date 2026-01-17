@@ -131,7 +131,7 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
               color: "white"
             }}
           >
-            {loading ? "Starting payment..." : "Pay and join"}
+            {loading ? "Opening secure checkout…" : "Pay and join"}
           </button>
         )}
         {isDisabled && (

@@ -792,13 +792,14 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
     baseUrl = `${proto}://${host}`;
   }
 
-  // Refund each payment
-  for (const payment of paidPayments) {
+  // Refund payments with concurrency limit of 5
+  const concurrencyLimit = 5;
+  const processRefund = async (payment: typeof paidPayments[0]): Promise<"success" | "failed" | "skipped"> => {
     try {
       // Must have Stripe payment intent ID to refund
       if (!payment.stripePaymentIntentId) {
-        failed++;
-        continue;
+        logger.warn("Skipping refund - missing payment intent ID", { correlationId, paymentId: payment.id });
+        return "skipped";
       }
 
       // Extract to const for type narrowing
@@ -929,10 +930,27 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
         }
       }
 
-      refunded++;
+      logger.info("Refund successful", { correlationId, paymentId: payment.id });
+      return "success";
     } catch (err) {
       logger.error("Failed to refund payment", { correlationId, paymentId: payment.id, error: err });
-      failed++;
+      return "failed";
+    }
+  };
+
+  // Process refunds in batches with concurrency limit of 5
+  for (let i = 0; i < paidPayments.length; i += concurrencyLimit) {
+    const batch = paidPayments.slice(i, i + concurrencyLimit);
+    const results = await Promise.all(batch.map(processRefund));
+    
+    for (const result of results) {
+      if (result === "success") {
+        refunded++;
+      } else if (result === "failed") {
+        failed++;
+      } else {
+        skippedAlreadyRefunded++;
+      }
     }
   }
 
