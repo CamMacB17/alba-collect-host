@@ -541,12 +541,18 @@ export async function reopenEvent(eventId: string, adminToken: string): Promise<
 }
 
 export async function cleanupAbandonedPledges(adminToken: string): Promise<{ cleaned: number }> {
+  const correlationId = generateCorrelationId();
+  const h = await headers();
+  
   // Validate admin token
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedToken || trimmedToken.length === 0) {
     throw new Error("Admin token is required");
   }
+
+  // Rate limit check
+  await assertRateLimitOrThrow({ adminToken: trimmedToken, headers: h });
 
   // Look up AdminToken by token string to verify it's valid
   const adminTokenRecord = await prisma.adminToken.findUnique({
