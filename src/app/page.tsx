@@ -7,11 +7,11 @@ export default function Home() {
         <div className="card">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2.5 leading-tight" style={{ color: "#FFFFE0" }}>
-              Collect payments for golf group events.
+              Alba Host
             </h1>
             
             <p className="text-base sm:text-lg mb-6 max-w-3xl mx-auto" style={{ color: "#FFFFE0", opacity: 0.9 }}>
-              Create your golf event, share a link, guests pay via Stripe, and attendance is tracked automatically.
+              Collect payments for golf group events.
             </p>
 
             {/* How it works */}
