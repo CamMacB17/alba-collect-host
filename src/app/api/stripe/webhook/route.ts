@@ -172,6 +172,9 @@ export async function POST(request: NextRequest) {
               amountPence: payment.amountPence,
               eventUrl,
               correlationId,
+              replyTo: payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0
+                ? payment.event.organiserEmail.trim()
+                : undefined,
             });
 
             // Mark email as sent

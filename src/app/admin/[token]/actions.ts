@@ -550,6 +550,9 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
           amountPence: refundAmount,
           eventUrl,
           correlationId,
+          replyTo: updatedPayment.event.organiserEmail && updatedPayment.event.organiserEmail.trim().length > 0
+            ? updatedPayment.event.organiserEmail.trim()
+            : undefined,
         });
 
         // Mark refund email as sent (only after successful send)
@@ -748,6 +751,9 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
               amountPence: refundAmount,
               eventUrl,
               correlationId,
+              replyTo: updatedPayment.event.organiserEmail && updatedPayment.event.organiserEmail.trim().length > 0
+                ? updatedPayment.event.organiserEmail.trim()
+                : undefined,
             });
 
             // Mark refund email as sent (only after successful send)

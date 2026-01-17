@@ -16,8 +16,9 @@ export async function sendPaymentConfirmationEmail(args: {
   amountPence: number;
   eventUrl: string;
   correlationId?: string;
+  replyTo?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl, correlationId } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, correlationId, replyTo } = args;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
@@ -57,14 +58,27 @@ Your payment of ${amountDisplay} for ${eventTitle} has been confirmed.
 View event: ${eventUrl}`;
 
   try {
-    await resend.emails.send({
+    const emailOptions: {
+      from: string;
+      to: string;
+      subject: string;
+      html: string;
+      text: string;
+      replyTo?: string;
+    } = {
       from: fromEmail,
       to,
       subject: `Payment confirmed – ${eventTitle}`,
       html: htmlBody,
       text: textBody,
-    });
-    logger.info("Payment confirmation email sent", { correlationId, to, eventTitle });
+    };
+
+    if (replyTo && replyTo.trim().length > 0) {
+      emailOptions.replyTo = replyTo.trim();
+    }
+
+    await resend.emails.send(emailOptions);
+    logger.info("Payment confirmation email sent", { correlationId, to, eventTitle, replyTo });
   } catch (error) {
     logger.error("Failed to send payment confirmation email", { correlationId, to, error });
     throw error;
@@ -81,8 +95,9 @@ export async function sendRefundConfirmationEmail(args: {
   amountPence: number;
   eventUrl: string;
   correlationId?: string;
+  replyTo?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl, correlationId } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, correlationId, replyTo } = args;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
@@ -122,14 +137,27 @@ Your payment of ${amountDisplay} for ${eventTitle} has been refunded.
 View event: ${eventUrl}`;
 
   try {
-    await resend.emails.send({
+    const emailOptions: {
+      from: string;
+      to: string;
+      subject: string;
+      html: string;
+      text: string;
+      replyTo?: string;
+    } = {
       from: fromEmail,
       to,
       subject: `Refund processed – ${eventTitle}`,
       html: htmlBody,
       text: textBody,
-    });
-    logger.info("Refund confirmation email sent", { correlationId, to, eventTitle });
+    };
+
+    if (replyTo && replyTo.trim().length > 0) {
+      emailOptions.replyTo = replyTo.trim();
+    }
+
+    await resend.emails.send(emailOptions);
+    logger.info("Refund confirmation email sent", { correlationId, to, eventTitle, replyTo });
   } catch (error) {
     logger.error("Failed to send refund confirmation email", { correlationId, to, error });
     throw error;
