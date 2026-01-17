@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { unstable_noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   unstable_noStore();
@@ -12,7 +11,7 @@ export async function GET(request: NextRequest) {
   const sessionId = searchParams.get("session_id");
 
   if (!sessionId || sessionId.trim().length === 0) {
-    return NextResponse.json({ error: "session_id is required" }, { status: 400 });
+    return NextResponse.json({ error: "session_id required" }, { status: 400 });
   }
 
   try {
@@ -29,23 +28,15 @@ export async function GET(request: NextRequest) {
             pricePence: true,
             maxSpots: true,
             closedAt: true,
-            organiserName: true,
           },
         },
       },
     });
 
-    if (!payment) {
-      return NextResponse.json({
-        status: "NOT_FOUND",
-        event: null,
-        payment: null,
-      });
-    }
-
-    // Determine status: treat CANCELLED with refundedAt as REFUNDED
     let status: "PAID" | "PLEDGED" | "CANCELLED" | "REFUNDED" | "NOT_FOUND";
-    if (payment.status === "CANCELLED" && payment.refundedAt) {
+    if (!payment) {
+      status = "NOT_FOUND";
+    } else if (payment.status === "CANCELLED" && payment.refundedAt) {
       status = "REFUNDED";
     } else {
       status = payment.status as "PAID" | "PLEDGED" | "CANCELLED";
@@ -53,24 +44,27 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       status,
-      event: {
-        id: payment.event.id,
-        title: payment.event.title,
-        slug: payment.event.slug,
-        pricePence: payment.event.pricePence,
-        maxSpots: payment.event.maxSpots,
-        closedAt: payment.event.closedAt,
-        organiserName: payment.event.organiserName,
-      },
-      payment: {
-        id: payment.id,
-        name: payment.name,
-        email: payment.email,
-        status: payment.status,
-        paidAt: payment.paidAt,
-        refundedAt: payment.refundedAt,
-        amountPenceCaptured: payment.amountPenceCaptured,
-      },
+      event: payment
+        ? {
+            id: payment.event.id,
+            title: payment.event.title,
+            slug: payment.event.slug,
+            pricePence: payment.event.pricePence,
+            maxSpots: payment.event.maxSpots,
+            closedAt: payment.event.closedAt,
+          }
+        : null,
+      payment: payment
+        ? {
+            id: payment.id,
+            name: payment.name,
+            email: payment.email,
+            status: payment.status,
+            paidAt: payment.paidAt,
+            refundedAt: payment.refundedAt,
+            amountPenceCaptured: payment.amountPenceCaptured,
+          }
+        : null,
     });
   } catch (err) {
     return NextResponse.json({ error: "Failed to fetch booking" }, { status: 500 });
