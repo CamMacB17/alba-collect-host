@@ -37,7 +37,7 @@ model Event {
   createdAt      DateTime    @default(now())
   closedAt       DateTime?
   payments       Payment[]
-  adminToken     AdminToken?
+  adminTokens    AdminToken[]
   actionLogs     AdminActionLog[]
 }
 
@@ -68,11 +68,13 @@ model Payment {
 
 model AdminToken {
   id        String    @id @default(cuid())
-  eventId   String    @unique
+  eventId   String
   token     String    @unique
   createdAt DateTime  @default(now())
   expiresAt DateTime?
   event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
 }
 
 model StripeWebhookEvent {

@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         maxSpots,
         organiserName: organiserName.trim(),
         organiserEmail: organiserEmail?.trim() || null,
-        adminToken: {
+        adminTokens: {
           create: {
             token,
             expiresAt,
@@ -112,16 +112,22 @@ export async function POST(request: Request) {
         },
       },
       include: {
-        adminToken: true,
+        adminTokens: true,
       },
     });
+
+    // Get the newly created admin token (should be the first/latest one)
+    const adminToken = event.adminTokens[0];
+    if (!adminToken) {
+      throw new Error("Failed to create admin token");
+    }
 
     return NextResponse.json(
       {
         slug: event.slug,
-        token: event.adminToken!.token,
+        token: adminToken.token,
         eventUrl: `/e/${event.slug}`,
-        adminUrl: `/admin/${event.adminToken!.token}`,
+        adminUrl: `/admin/${adminToken.token}`,
       },
       { status: 201 }
     );
