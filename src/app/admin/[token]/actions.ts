@@ -6,6 +6,7 @@ import { getStripe } from "@/lib/stripe";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logAdminAction } from "@/lib/adminActionLog";
 import { sendRefundConfirmationEmail } from "@/lib/email";
+import { logger, generateCorrelationId } from "@/lib/logger";
 import { headers } from "next/headers";
 
 export async function cancelPledge(paymentId: string, adminToken: string): Promise<void> {
@@ -449,6 +450,7 @@ export async function cleanupAbandonedPledges(adminToken: string): Promise<{ cle
 }
 
 export async function refundPayment(paymentId: string, adminToken: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const correlationId = generateCorrelationId();
   const trimmedPaymentId = paymentId?.trim();
   const trimmedToken = adminToken?.trim();
 
@@ -547,6 +549,7 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
           eventTitle: updatedPayment.event.title,
           amountPence: refundAmount,
           eventUrl,
+          correlationId,
         });
 
         // Mark refund email as sent (only after successful send)
@@ -555,13 +558,15 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
           data: { refundEmailSentAt: new Date() },
         });
 
-        console.log("[refundPayment] Refund confirmation email sent", {
+        logger.info("Refund confirmation email sent", {
+          correlationId,
           paymentId: trimmedPaymentId,
           email: updatedPayment.email,
         });
       } catch (emailErr) {
         // Log email error but don't fail the refund
-        console.error("[refundPayment] Failed to send refund confirmation email", {
+        logger.error("Failed to send refund confirmation email", {
+          correlationId,
           paymentId: trimmedPaymentId,
           paymentEmail: updatedPayment.email,
           error: emailErr instanceof Error ? emailErr.message : String(emailErr),
@@ -570,12 +575,14 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
       }
     } else {
       if (updatedPayment && !updatedPayment.email) {
-        console.warn("[refundPayment] Skipping refund email - payment has no email address", {
+        logger.warn("Skipping refund email - payment has no email address", {
+          correlationId,
           paymentId: trimmedPaymentId,
         });
       }
       if (updatedPayment && updatedPayment.refundEmailSentAt) {
-        console.log("[refundPayment] Skipping refund email - already sent", {
+        logger.info("Skipping refund email - already sent", {
+          correlationId,
           paymentId: trimmedPaymentId,
           refundEmailSentAt: updatedPayment.refundEmailSentAt,
         });
@@ -592,6 +599,7 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
 }
 
 export async function refundAllPaidPayments(adminToken: string): Promise<{ attempted: number; refunded: number; skippedAlreadyRefunded: number; failed: number }> {
+  const correlationId = generateCorrelationId();
   const trimmedToken = adminToken?.trim();
 
   if (!trimmedToken || trimmedToken.length === 0) {
@@ -739,6 +747,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
               eventTitle: updatedPayment.event.title,
               amountPence: refundAmount,
               eventUrl,
+              correlationId,
             });
 
             // Mark refund email as sent (only after successful send)
@@ -747,13 +756,15 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
               data: { refundEmailSentAt: new Date() },
             });
 
-            console.log("[refundAllPaidPayments] Refund confirmation email sent", {
+            logger.info("Refund confirmation email sent", {
+              correlationId,
               paymentId: payment.id,
               email: updatedPayment.email,
             });
           } catch (emailErr) {
             // Log email error but don't fail the refund
-            console.error("[refundAllPaidPayments] Failed to send refund confirmation email", {
+            logger.error("Failed to send refund confirmation email", {
+              correlationId,
               paymentId: payment.id,
               paymentEmail: updatedPayment.email,
               error: emailErr instanceof Error ? emailErr.message : String(emailErr),
@@ -762,12 +773,14 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
           }
         } else {
           if (updatedPayment && !updatedPayment.email) {
-            console.warn("[refundAllPaidPayments] Skipping refund email - payment has no email address", {
+            logger.warn("Skipping refund email - payment has no email address", {
+              correlationId,
               paymentId: payment.id,
             });
           }
           if (updatedPayment && updatedPayment.refundEmailSentAt) {
-            console.log("[refundAllPaidPayments] Skipping refund email - already sent", {
+            logger.info("Skipping refund email - already sent", {
+              correlationId,
               paymentId: payment.id,
               refundEmailSentAt: updatedPayment.refundEmailSentAt,
             });
@@ -777,7 +790,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
 
       refunded++;
     } catch (err) {
-      console.error(`[refundAllPaidPayments] Failed to refund payment ${payment.id}:`, err);
+      logger.error("Failed to refund payment", { correlationId, paymentId: payment.id, error: err });
       failed++;
     }
   }

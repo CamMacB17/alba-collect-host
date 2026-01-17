@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logger } from "@/lib/logger";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -14,17 +15,18 @@ export async function sendPaymentConfirmationEmail(args: {
   eventTitle: string;
   amountPence: number;
   eventUrl: string;
+  correlationId?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, correlationId } = args;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
-    console.warn("[email] Missing email address, skipping payment confirmation", { name, eventTitle });
+    logger.warn("Missing email address, skipping payment confirmation", { correlationId, name, eventTitle });
     return;
   }
 
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping payment confirmation email", { to });
+    logger.warn("RESEND_API_KEY not set, skipping payment confirmation email", { correlationId, to });
     return;
   }
 
@@ -62,8 +64,9 @@ View event: ${eventUrl}`;
       html: htmlBody,
       text: textBody,
     });
+    logger.info("Payment confirmation email sent", { correlationId, to, eventTitle });
   } catch (error) {
-    console.error("[email] Failed to send payment confirmation email", { to, error });
+    logger.error("Failed to send payment confirmation email", { correlationId, to, error });
     throw error;
   }
 }
@@ -77,17 +80,18 @@ export async function sendRefundConfirmationEmail(args: {
   eventTitle: string;
   amountPence: number;
   eventUrl: string;
+  correlationId?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, correlationId } = args;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
-    console.warn("[email] Missing email address, skipping refund confirmation", { name, eventTitle });
+    logger.warn("Missing email address, skipping refund confirmation", { correlationId, name, eventTitle });
     return;
   }
 
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping refund confirmation email", { to });
+    logger.warn("RESEND_API_KEY not set, skipping refund confirmation email", { correlationId, to });
     return;
   }
 
@@ -125,8 +129,9 @@ View event: ${eventUrl}`;
       html: htmlBody,
       text: textBody,
     });
+    logger.info("Refund confirmation email sent", { correlationId, to, eventTitle });
   } catch (error) {
-    console.error("[email] Failed to send refund confirmation email", { to, error });
+    logger.error("Failed to send refund confirmation email", { correlationId, to, error });
     throw error;
   }
 }
@@ -153,16 +158,17 @@ export async function sendEmail(args: {
   to: string;
   subject: string;
   body: string;
+  correlationId?: string;
 }): Promise<void> {
-  const { to, subject, body } = args;
+  const { to, subject, body, correlationId } = args;
 
   if (!to || to.trim().length === 0) {
-    console.warn("[email] Missing email address, skipping email", { subject });
+    logger.warn("Missing email address, skipping email", { correlationId, subject });
     return;
   }
 
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping email", { to, subject });
+    logger.warn("RESEND_API_KEY not set, skipping email", { correlationId, to, subject });
     return;
   }
 
@@ -173,8 +179,9 @@ export async function sendEmail(args: {
       subject,
       text: body,
     });
+    logger.info("Email sent", { correlationId, to, subject });
   } catch (error) {
-    console.error("[email] Failed to send email", { to, subject, error });
+    logger.error("Failed to send email", { correlationId, to, subject, error });
     throw error;
   }
 }

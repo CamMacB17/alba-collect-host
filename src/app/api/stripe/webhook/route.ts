@@ -3,24 +3,27 @@ import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
+import { logger, generateCorrelationId } from "@/lib/logger";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
+  const correlationId = generateCorrelationId();
+  
   try {
     // Get raw body for signature verification
     const body = await request.text();
     const signature = request.headers.get("stripe-signature");
 
     if (!signature) {
-      console.error("[webhook] Missing stripe-signature header");
+      logger.error("Missing stripe-signature header", { correlationId });
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
     // Verify webhook secret
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error("[webhook] STRIPE_WEBHOOK_SECRET is not set");
+      logger.error("STRIPE_WEBHOOK_SECRET is not set", { correlationId });
       return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
     }
 
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
-      console.error("[webhook] Signature verification failed:", err);
+      logger.error("Signature verification failed", { correlationId, error: err });
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
@@ -44,7 +47,8 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingWebhookEvent) {
-        console.log("[webhook] Stripe event already processed, skipping", {
+        logger.info("Stripe event already processed, skipping", {
+          correlationId,
           stripeEventId: event.id,
           type: event.type,
         });
@@ -62,7 +66,8 @@ export async function POST(request: NextRequest) {
       // Read paymentId from metadata
       const paymentId = session.metadata?.paymentId;
       if (!paymentId) {
-        console.warn("[webhook] checkout.session.completed missing metadata.paymentId", {
+        logger.warn("checkout.session.completed missing metadata.paymentId", {
+          correlationId,
           sessionId: session.id,
         });
         return NextResponse.json({ received: true });
@@ -75,13 +80,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (!existingPayment) {
-          console.error("[webhook] Payment not found", { paymentId, sessionId: session.id });
+          logger.error("Payment not found", { correlationId, paymentId, sessionId: session.id });
           return NextResponse.json({ error: "Payment not found" }, { status: 404 });
         }
 
         // If already PAID, skip update and emails (idempotent)
         if (existingPayment.status === "PAID") {
-          console.log("[webhook] Payment already PAID, skipping update", {
+          logger.info("Payment already PAID, skipping update", {
+            correlationId,
             paymentId,
             sessionId: session.id,
           });
@@ -92,7 +98,8 @@ export async function POST(request: NextRequest) {
         try {
           assertValidPaymentTransition(existingPayment.status, "PAID");
         } catch (err) {
-          console.error("[webhook] Invalid payment status transition", {
+          logger.error("Invalid payment status transition", {
+            correlationId,
             paymentId,
             from: existingPayment.status,
             to: "PAID",
@@ -133,7 +140,7 @@ export async function POST(request: NextRequest) {
           data: updateData,
         });
 
-        console.log("[webhook] Payment updated to PAID", { paymentId, sessionId: session.id });
+        logger.info("Payment updated to PAID", { correlationId, paymentId, sessionId: session.id });
 
         // Fetch payment with event details for email (check receiptEmailSentAt)
         const payment = await prisma.payment.findUnique({
@@ -164,6 +171,7 @@ export async function POST(request: NextRequest) {
               eventTitle: payment.event.title,
               amountPence: payment.amountPence,
               eventUrl,
+              correlationId,
             });
 
             // Mark email as sent
@@ -173,7 +181,8 @@ export async function POST(request: NextRequest) {
             });
           } catch (emailErr) {
             // Log email error but don't fail the webhook
-            console.error("[webhook] Failed to send payment confirmation email", {
+            logger.error("Failed to send payment confirmation email", {
+              correlationId,
               paymentId,
               error: emailErr,
             });
@@ -215,6 +224,7 @@ Joiner: ${payment.name} (${payment.email})
 Amount paid: ${priceDisplay}
 
 ${spotsDisplay}`,
+                correlationId,
               });
 
               // Mark organiser notification email as sent (only after successful send)
@@ -225,7 +235,8 @@ ${spotsDisplay}`,
             } catch (emailErr) {
               // Log email error but don't fail the webhook
               // Do NOT set organiserNotificationSentAt if send fails (allows retry)
-              console.error("[webhook] Failed to send organiser notification email", {
+              logger.error("Failed to send organiser notification email", {
+                correlationId,
                 paymentId,
                 organiserEmail: payment.event.organiserEmail,
                 error: emailErr,
@@ -234,7 +245,7 @@ ${spotsDisplay}`,
           }
         }
       } catch (err) {
-        console.error("[webhook] Failed to update payment", { paymentId, error: err });
+        logger.error("Failed to update payment", { correlationId, paymentId, error: err });
         return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
       }
 
@@ -247,7 +258,8 @@ ${spotsDisplay}`,
 
       const paymentId = session.metadata?.paymentId;
       if (!paymentId) {
-        console.warn("[webhook] checkout.session.expired missing metadata.paymentId", {
+        logger.warn("checkout.session.expired missing metadata.paymentId", {
+          correlationId,
           sessionId: session.id,
         });
         return NextResponse.json({ received: true });
@@ -260,7 +272,8 @@ ${spotsDisplay}`,
         });
 
         if (!existingPayment) {
-          console.warn("[webhook] Payment not found for expired session", {
+          logger.warn("Payment not found for expired session", {
+            correlationId,
             paymentId,
             sessionId: session.id,
           });
@@ -271,7 +284,8 @@ ${spotsDisplay}`,
         try {
           assertValidPaymentTransition(existingPayment.status, "CANCELLED");
         } catch (err) {
-          console.error("[webhook] Invalid payment status transition for expired session", {
+          logger.error("Invalid payment status transition for expired session", {
+            correlationId,
             paymentId,
             from: existingPayment.status,
             to: "CANCELLED",
@@ -285,9 +299,9 @@ ${spotsDisplay}`,
           where: { id: paymentId },
           data: { status: "CANCELLED" },
         });
-        console.log("[webhook] Payment updated to CANCELLED", { paymentId, sessionId: session.id });
+        logger.info("Payment updated to CANCELLED", { correlationId, paymentId, sessionId: session.id });
       } catch (err) {
-        console.error("[webhook] Failed to update payment on expired session", { paymentId, error: err });
+        logger.error("Failed to update payment on expired session", { correlationId, paymentId, error: err });
         return NextResponse.json({ received: true });
       }
     }
@@ -295,13 +309,13 @@ ${spotsDisplay}`,
     // Handle payment_intent.succeeded (optional)
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      console.log("[webhook] payment_intent.succeeded", { paymentIntentId: paymentIntent.id });
+      logger.info("payment_intent.succeeded", { correlationId, paymentIntentId: paymentIntent.id });
       // Could update Payment here if needed, but checkout.session.completed is primary
     }
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("[webhook] Unexpected error:", err);
+    logger.error("Unexpected error", { correlationId, error: err });
     // Always return 200 to prevent Stripe retries
     return NextResponse.json({ received: true });
   }

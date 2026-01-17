@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
+import { logger, generateCorrelationId } from "@/lib/logger";
 
 export async function cleanupPledges(): Promise<number> {
+  const correlationId = generateCorrelationId();
   const cutoff = new Date(Date.now() - 30 * 60 * 1000);
 
   // Find PLEDGED payments older than cutoff
@@ -30,9 +32,10 @@ export async function cleanupPledges(): Promise<number> {
       cleaned++;
     } catch (err) {
       // Log error but continue processing other payments
-      console.error(`[cleanupPledges] Failed to cancel payment ${payment.id}:`, err);
+      logger.error("Failed to cancel payment", { correlationId, paymentId: payment.id, error: err });
     }
   }
 
+  logger.info("Cleanup pledges completed", { correlationId, cleaned, total: oldPledges.length });
   return cleaned;
 }
