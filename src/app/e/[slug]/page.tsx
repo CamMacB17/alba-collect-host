@@ -2,6 +2,7 @@ import { getPublicEventView } from "@/lib/event";
 import { prisma } from "@/lib/prisma";
 import JoinAndPayClient from "./JoinAndPayClient";
 import PaymentStatusPolling from "./PaymentStatusPolling";
+import BookingWrapper from "./BookingWrapper";
 import { unstable_noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -39,27 +40,6 @@ export default async function EventPage({
 
   const { event, spotsTaken, spotsLeft, isFull } = result;
 
-  // Lookup payment by session_id if present (canonical booking identifier)
-  let bookingPayment = null;
-  if (session_id) {
-    bookingPayment = await prisma.payment.findFirst({
-      where: {
-        stripeCheckoutSessionId: session_id.trim(),
-        eventId: event.id,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        status: true,
-        paidAt: true,
-        refundedAt: true,
-        amountPence: true,
-        amountPenceCaptured: true,
-      },
-    });
-  }
-
   // Check if event is closed
   const eventRecord = await prisma.event.findUnique({
     where: { id: event.id },
@@ -67,28 +47,33 @@ export default async function EventPage({
   });
   const isClosed = eventRecord?.closedAt !== null;
 
-  // Determine status message
+  // Determine if we should show booking confirmation (session_id present)
+  const hasSessionId = !!session_id;
+
+  // Determine status message (only if no session_id)
   let statusMessage: { type: "success" | "info" | "error"; text: string } | null = null;
-  if (success === "1" || bookingPayment) {
-    statusMessage = {
-      type: "success",
-      text: "You're in.",
-    };
-  } else if (canceled === "1") {
-    statusMessage = {
-      type: "info",
-      text: "Payment cancelled. You can try again.",
-    };
-  } else if (isClosed) {
-    statusMessage = {
-      type: "error",
-      text: "This event is closed.",
-    };
-  } else if (isFull) {
-    statusMessage = {
-      type: "error",
-      text: "This event is full.",
-    };
+  if (!hasSessionId) {
+    if (success === "1") {
+      statusMessage = {
+        type: "success",
+        text: "You're in.",
+      };
+    } else if (canceled === "1") {
+      statusMessage = {
+        type: "info",
+        text: "Payment cancelled. You can try again.",
+      };
+    } else if (isClosed) {
+      statusMessage = {
+        type: "error",
+        text: "This event is closed.",
+      };
+    } else if (isFull) {
+      statusMessage = {
+        type: "error",
+        text: "This event is full.",
+      };
+    }
   }
 
   return (
@@ -157,8 +142,13 @@ export default async function EventPage({
           </div>
         </div>
 
-        {/* Status Messages */}
-        {statusMessage && (
+        {/* Booking Confirmation (when session_id present) */}
+        {hasSessionId && (
+          <BookingWrapper sessionId={session_id!} slug={slug} isFull={isFull} isClosed={isClosed} />
+        )}
+
+        {/* Status Messages (only when no session_id) */}
+        {!hasSessionId && statusMessage && (
           <div
             className="p-3 rounded border"
             style={{
@@ -177,17 +167,7 @@ export default async function EventPage({
             {statusMessage.type === "success" ? (
               <PaymentStatusPolling 
                 eventId={event.id} 
-                email={bookingPayment?.email || email} 
-                payment={bookingPayment ? {
-                  id: bookingPayment.id,
-                  email: bookingPayment.email,
-                  name: bookingPayment.name,
-                  status: bookingPayment.status,
-                  paidAt: bookingPayment.paidAt,
-                  refundedAt: bookingPayment.refundedAt,
-                  amountPence: bookingPayment.amountPence,
-                  amountPenceCaptured: bookingPayment.amountPenceCaptured,
-                } : null}
+                email={email} 
               />
             ) : (
               <p className="text-sm" style={{ 
@@ -199,8 +179,8 @@ export default async function EventPage({
           </div>
         )}
 
-        {/* Join Card - Hide if user has already joined (success state) or has valid booking */}
-        {!isClosed && !isFull && statusMessage?.type !== "success" && !bookingPayment && (
+        {/* Join Card - Hide if session_id present or success state */}
+        {!hasSessionId && !isClosed && !isFull && statusMessage?.type !== "success" && (
           <div className="card">
             <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
           </div>
