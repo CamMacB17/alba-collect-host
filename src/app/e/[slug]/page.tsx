@@ -1,7 +1,6 @@
 import { getPublicEventView } from "@/lib/event";
 import { prisma } from "@/lib/prisma";
 import JoinAndPayClient from "./JoinAndPayClient";
-import PaymentStatusPolling from "./PaymentStatusPolling";
 import BookingWrapper from "./BookingWrapper";
 import { unstable_noStore } from "next/cache";
 
@@ -19,12 +18,12 @@ export default async function EventPage({
   searchParams,
 }: { 
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ success?: string; canceled?: string; email?: string; paymentId?: string; session_id?: string }>;
+  searchParams: Promise<{ canceled?: string; session_id?: string }>;
 }) {
   unstable_noStore();
   
   const { slug } = await params;
-  const { success, canceled, email, paymentId, session_id } = await searchParams;
+  const { canceled, session_id } = await searchParams;
 
   const result = await getPublicEventView(slug);
 
@@ -51,14 +50,9 @@ export default async function EventPage({
   const hasSessionId = !!session_id;
 
   // Determine status message (only if no session_id)
-  let statusMessage: { type: "success" | "info" | "error"; text: string } | null = null;
+  let statusMessage: { type: "info" | "error"; text: string } | null = null;
   if (!hasSessionId) {
-    if (success === "1") {
-      statusMessage = {
-        type: "success",
-        text: "You're in.",
-      };
-    } else if (canceled === "1") {
+    if (canceled === "1") {
       statusMessage = {
         type: "info",
         text: "Payment cancelled. You can try again.",
@@ -152,35 +146,24 @@ export default async function EventPage({
           <div
             className="p-3 rounded border"
             style={{
-              background: statusMessage.type === "success" 
-                ? "rgba(16, 185, 129, 0.15)" 
-                : statusMessage.type === "error"
+              background: statusMessage.type === "error"
                 ? "rgba(226, 54, 66, 0.15)"
                 : "rgba(247, 130, 34, 0.15)",
-              borderColor: statusMessage.type === "success"
-                ? "#10b981"
-                : statusMessage.type === "error"
+              borderColor: statusMessage.type === "error"
                 ? "#E23642"
                 : "#F78222"
             }}
           >
-            {statusMessage.type === "success" ? (
-              <PaymentStatusPolling 
-                eventId={event.id} 
-                email={email} 
-              />
-            ) : (
-              <p className="text-sm" style={{ 
-                color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
-              }}>
-                {statusMessage.text}
-              </p>
-            )}
+            <p className="text-sm" style={{ 
+              color: statusMessage.type === "error" ? "#E23642" : "#FFFFE0" 
+            }}>
+              {statusMessage.text}
+            </p>
           </div>
         )}
 
-        {/* Join Card - Hide if session_id present or success state */}
-        {!hasSessionId && !isClosed && !isFull && statusMessage?.type !== "success" && (
+        {/* Join Card - Hide if session_id present */}
+        {!hasSessionId && !isClosed && !isFull && (
           <div className="card">
             <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
           </div>

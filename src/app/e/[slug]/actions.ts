@@ -45,8 +45,8 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
         },
       });
 
-      if (existingPayment && existingPayment.status === "PAID") {
-        throw new Error("ALREADY_PAID");
+      if (existingPayment && (existingPayment.status === "PAID" || existingPayment.status === "PLEDGED")) {
+        throw new Error("ALREADY_BOOKED");
       }
 
       if (event.maxSpots !== null) {
@@ -87,8 +87,8 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
       });
     });
   } catch (err) {
-    if (err instanceof Error && err.message === "ALREADY_PAID") {
-      return { error: "This email is already marked as paid for this event." };
+    if (err instanceof Error && err.message === "ALREADY_BOOKED") {
+      return { error: "You're already booked for this event." };
     }
     if (err instanceof Error && err.message === "EVENT_FULL") {
       return { error: "This event is full" };
