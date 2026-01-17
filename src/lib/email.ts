@@ -15,10 +15,14 @@ export async function sendPaymentConfirmationEmail(args: {
   eventTitle: string;
   amountPence: number;
   eventUrl: string;
+  sessionId?: string;
   correlationId?: string;
   replyTo?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl, correlationId, replyTo } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, sessionId, correlationId, replyTo } = args;
+  
+  // Build event URL with session_id if provided
+  const finalEventUrl = sessionId ? `${eventUrl}?session_id=${encodeURIComponent(sessionId)}` : eventUrl;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
@@ -103,10 +107,14 @@ export async function sendRefundConfirmationEmail(args: {
   eventTitle: string;
   amountPence: number;
   eventUrl: string;
+  sessionId?: string;
   correlationId?: string;
   replyTo?: string;
 }): Promise<void> {
-  const { to, name, eventTitle, amountPence, eventUrl, correlationId, replyTo } = args;
+  const { to, name, eventTitle, amountPence, eventUrl, sessionId, correlationId, replyTo } = args;
+  
+  // Build event URL with session_id if provided
+  const finalEventUrl = sessionId ? `${eventUrl}?session_id=${encodeURIComponent(sessionId)}` : eventUrl;
 
   // Guard missing email address
   if (!to || to.trim().length === 0) {
@@ -134,7 +142,7 @@ export async function sendRefundConfirmationEmail(args: {
         <h2>Refund processed – ${escapeHtml(eventTitle)}</h2>
         <p>Hi ${escapeHtml(name)},</p>
         <p>Your payment of <strong>${escapeHtml(amountDisplay)}</strong> for <strong>${escapeHtml(eventTitle)}</strong> has been refunded.</p>
-        <p><a href="${eventUrl}">View event page</a></p>
+        <p><a href="${finalEventUrl}">View event page</a></p>
       </body>
     </html>
   `;
@@ -143,7 +151,7 @@ export async function sendRefundConfirmationEmail(args: {
 
 Your payment of ${amountDisplay} for ${eventTitle} has been refunded.
 
-View event: ${eventUrl}`;
+View event: ${finalEventUrl}`;
 
   try {
     const emailOptions: {

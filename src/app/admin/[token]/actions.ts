@@ -677,6 +677,7 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
           eventTitle: updatedPayment.event.title,
           amountPence: refundAmount,
           eventUrl,
+          sessionId: updatedPayment.stripeCheckoutSessionId || undefined,
           correlationId,
           replyTo: updatedPayment.event.organiserEmail && updatedPayment.event.organiserEmail.trim().length > 0
             ? updatedPayment.event.organiserEmail.trim()

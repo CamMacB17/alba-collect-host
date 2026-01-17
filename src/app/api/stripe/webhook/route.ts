@@ -224,6 +224,7 @@ export async function POST(request: NextRequest) {
                 eventTitle: payment.event.title,
                 amountPence: payment.amountPence,
                 eventUrl,
+                sessionId: session.id,
                 correlationId,
                 replyTo: payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0
                   ? payment.event.organiserEmail.trim()
