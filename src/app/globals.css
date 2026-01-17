@@ -32,11 +32,13 @@ body {
 
 /* Card utility */
 .card {
-  background: var(--alba-card-bg);
+  background: linear-gradient(to bottom, rgba(51, 51, 56, 0.95), var(--alba-card-bg));
   border: 1px solid var(--alba-border);
   border-radius: 8px;
   padding: 1.25rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 @media (min-width: 640px) {
@@ -63,7 +65,9 @@ input[type="email"]:focus,
 input[type="number"]:focus {
   outline: none;
   border-color: var(--alba-accent);
-  box-shadow: 0 0 0 3px rgba(247, 130, 34, 0.1);
+  box-shadow: 
+    0 0 0 3px rgba(247, 130, 34, 0.1),
+    0 0 8px rgba(247, 130, 34, 0.15);
 }
 
 input[type="text"]:disabled,
@@ -84,10 +88,16 @@ input[type="number"]:disabled {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 
+    0 2px 4px rgba(247, 130, 34, 0.2),
+    0 0 8px rgba(247, 130, 34, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: #e6731f;
+  box-shadow: 
+    0 2px 6px rgba(247, 130, 34, 0.3),
+    0 0 12px rgba(247, 130, 34, 0.15);
 }
 
 .btn-primary:disabled {
@@ -180,6 +190,8 @@ input[type="number"]:disabled {
   background: rgba(251, 185, 36, 0.15);
   color: var(--alba-yellow);
   border: 1px solid rgba(251, 185, 36, 0.3);
+  text-shadow: 0 0 6px rgba(251, 185, 36, 0.4);
+  box-shadow: 0 0 4px rgba(251, 185, 36, 0.1);
 }
 
 .badge-error {
@@ -192,6 +204,8 @@ input[type="number"]:disabled {
   background: rgba(247, 130, 34, 0.15);
   color: var(--alba-accent);
   border: 1px solid rgba(247, 130, 34, 0.3);
+  text-shadow: 0 0 6px rgba(247, 130, 34, 0.4);
+  box-shadow: 0 0 4px rgba(247, 130, 34, 0.1);
 }
 
 .badge-neutral {
@@ -213,6 +227,9 @@ input[type="number"]:disabled {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--alba-green);
   color: var(--alba-green);
+  box-shadow: 
+    0 0 8px rgba(16, 185, 129, 0.1),
+    inset 0 1px 0 rgba(16, 185, 129, 0.1);
 }
 
 .alert-error {
@@ -225,6 +242,9 @@ input[type="number"]:disabled {
   background: rgba(247, 130, 34, 0.15);
   border-color: var(--alba-accent);
   color: var(--alba-text);
+  box-shadow: 
+    0 0 8px rgba(247, 130, 34, 0.1),
+    inset 0 1px 0 rgba(247, 130, 34, 0.1);
 }
 
 /* Typography utilities */
@@ -248,4 +268,22 @@ input[type="number"]:disabled {
   color: var(--alba-text);
   line-height: 1.4;
   opacity: 0.8;
+}
+
+/* Accent text glow utilities */
+.text-glow-yellow {
+  text-shadow: 0 0 8px rgba(251, 185, 36, 0.3);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 8px rgba(247, 130, 34, 0.3);
+}
+
+/* Auto-apply glow to elements with yellow/accent inline styles */
+[style*="var(--alba-yellow)"] {
+  text-shadow: 0 0 8px rgba(251, 185, 36, 0.3);
+}
+
+[style*="var(--alba-accent)"] {
+  text-shadow: 0 0 8px rgba(247, 130, 34, 0.3);
 }
