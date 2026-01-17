@@ -46,16 +46,13 @@ export async function sendPaymentConfirmationEmail(args: {
         <h2>Payment confirmed – ${escapeHtml(eventTitle)}</h2>
         <p>Hi ${escapeHtml(name)},</p>
         <p>Your payment of <strong>${escapeHtml(amountDisplay)}</strong> for <strong>${escapeHtml(eventTitle)}</strong> has been confirmed.</p>
-        <p><a href="${eventUrl}">View event page</a></p>
       </body>
     </html>
   `;
 
   const textBody = `Hi ${name},
 
-Your payment of ${amountDisplay} for ${eventTitle} has been confirmed.
-
-View event: ${eventUrl}`;
+Your payment of ${amountDisplay} for ${eventTitle} has been confirmed.`;
 
   try {
     const emailOptions: {
