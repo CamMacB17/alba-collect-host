@@ -23,13 +23,14 @@ export default function RegenerateAdminLinkButton({ token }: { token: string }) 
       const res = await regenerateAdminToken(token);
       if (res.ok) {
         setNewAdminUrl(res.adminUrl);
-        router.refresh();
+        // Immediately redirect to the new admin URL
+        window.location.assign(res.adminUrl);
       } else {
         setError(res.error);
+        setIsLoading(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to regenerate admin link");
-    } finally {
       setIsLoading(false);
     }
   };
