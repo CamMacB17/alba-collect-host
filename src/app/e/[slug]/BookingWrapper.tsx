@@ -3,6 +3,7 @@
 import { useState } from "react";
 import BookingConfirmation from "./BookingConfirmation";
 import JoinAndPayClient from "./JoinAndPayClient";
+import Card from "@/components/ui/Card";
 
 type BookingWrapperProps = {
   sessionId: string;
@@ -22,9 +23,9 @@ export default function BookingWrapper({ sessionId, slug, isFull, isClosed }: Bo
     <>
       <BookingConfirmation sessionId={sessionId} onBookingResolved={handleBookingResolved} />
       {bookingFound === false && !isClosed && !isFull && (
-        <div className="card">
+        <Card>
           <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
-        </div>
+        </Card>
       )}
     </>
   );

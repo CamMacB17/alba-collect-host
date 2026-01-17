@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { payAndJoin } from "./actions";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Alert from "@/components/ui/Alert";
 
 type JoinAndPayClientProps = {
   slug: string;
@@ -58,55 +61,48 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name and Email side-by-side on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="name" className="block text-xs font-medium mb-1.5 opacity-80">
-              Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={loading || isDisabled}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-xs font-medium mb-1.5 opacity-80">
-              Email *
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading || isDisabled}
-              className="w-full"
-            />
-          </div>
+          <Input
+            type="text"
+            id="name"
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            disabled={loading || isDisabled}
+          />
+          <Input
+            type="email"
+            id="email"
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading || isDisabled}
+          />
         </div>
         {!isDisabled && (
-          <button
+          <Button
             type="submit"
+            loading={loading}
+            loadingText="Opening secure checkout…"
             disabled={loading}
-            className="btn-primary w-full py-2.5"
+            fullWidth
+            className="py-2.5"
           >
-            {loading ? "Opening secure checkout…" : "Pay and join"}
-          </button>
+            Pay and join
+          </Button>
         )}
         {isDisabled && (
-          <div className="alert alert-error text-center">
-            <p className="text-xs">
-              {isClosed ? "This event is closed." : "This event is full."}
-            </p>
-          </div>
+          <Alert variant="error">
+            {isClosed ? "This event is closed." : "This event is full."}
+          </Alert>
         )}
       </form>
       {message && (
-        <div className="mt-4 alert alert-error">
-          <p className="text-xs">{message.text}</p>
+        <div className="mt-4">
+          <Alert variant="error">
+            {message.text}
+          </Alert>
         </div>
       )}
     </div>

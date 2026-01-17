@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Alert from "@/components/ui/Alert";
 
 type BookingData = {
   status: "PAID" | "PLEDGED" | "CANCELLED" | "REFUNDED" | "NOT_FOUND";
@@ -55,11 +56,9 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
 
   if (loading) {
     return (
-      <div className="alert alert-success">
-        <p className="text-sm">
-          Loading booking...
-        </p>
-      </div>
+      <Alert variant="success">
+        Loading booking...
+      </Alert>
     );
   }
 
@@ -77,10 +76,7 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
       : null;
 
     return (
-      <div className="alert alert-success">
-        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
-          You're in.
-        </h2>
+      <Alert variant="success" title="You&apos;re in.">
         {booking.payment.email && (
           <p className="text-xs mt-1 opacity-70">
             Paid as: {booking.payment.email}
@@ -94,19 +90,16 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
         <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
-      </div>
+      </Alert>
     );
   }
 
   // PLEDGED status
   if (booking.status === "PLEDGED" && booking.payment) {
     return (
-      <div className="alert alert-success">
-        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-green)" }}>
-          You're in.
-        </h2>
+      <Alert variant="success" title="You&apos;re in.">
         <p className="mb-1 text-xs">
-          Confirming payment… If this hasn't updated in 30 seconds, refresh.
+          Confirming payment… If this hasn&apos;t updated in 30 seconds, refresh.
         </p>
         {booking.payment.email && (
           <p className="text-xs mt-1 opacity-70">
@@ -116,7 +109,7 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
         <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
-      </div>
+      </Alert>
     );
   }
 
@@ -127,10 +120,7 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
       : null;
 
     return (
-      <div className="alert alert-error">
-        <h2 className="text-base font-semibold mb-1" style={{ color: "var(--alba-red)" }}>
-          {booking.status === "REFUNDED" ? "Refunded" : "Cancelled"}
-        </h2>
+      <Alert variant="error" title={booking.status === "REFUNDED" ? "Refunded" : "Cancelled"}>
         {booking.payment.email && (
           <p className="text-xs mt-1 opacity-70">
             {booking.status === "REFUNDED" ? "Refunded for" : "Cancelled for"}: {booking.payment.email}
@@ -141,7 +131,7 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
             {booking.status === "REFUNDED" ? "Refunded" : "Cancelled"} on {refundDate}
           </p>
         )}
-      </div>
+      </Alert>
     );
   }
 

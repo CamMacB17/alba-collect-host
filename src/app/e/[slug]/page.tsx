@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import JoinAndPayClient from "./JoinAndPayClient";
 import BookingWrapper from "./BookingWrapper";
 import { unstable_noStore } from "next/cache";
+import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
+import Alert from "@/components/ui/Alert";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -74,7 +77,7 @@ export default async function EventPage({
     <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Event Header Card */}
-        <div className="card">
+        <Card>
           <h1 className="text-2xl font-semibold mb-4">
             {event.title}
           </h1>
@@ -107,16 +110,16 @@ export default async function EventPage({
               <div className="text-label mb-1.5">Status</div>
               <div>
                 {isClosed ? (
-                  <span className="badge badge-error">Closed</span>
+                  <Badge variant="error">Closed</Badge>
                 ) : isFull ? (
-                  <span className="badge badge-error">Full</span>
+                  <Badge variant="error">Full</Badge>
                 ) : (
-                  <span className="badge badge-warning">Open</span>
+                  <Badge variant="warning">Open</Badge>
                 )}
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Booking Confirmation (when session_id present) */}
         {hasSessionId && (
@@ -125,18 +128,16 @@ export default async function EventPage({
 
         {/* Status Messages (only when no session_id) */}
         {!hasSessionId && statusMessage && (
-          <div className={statusMessage.type === "error" ? "alert alert-error" : "alert alert-info"}>
-            <p className="text-sm">
-              {statusMessage.text}
-            </p>
-          </div>
+          <Alert variant={statusMessage.type === "error" ? "error" : "info"}>
+            {statusMessage.text}
+          </Alert>
         )}
 
         {/* Join Card - Hide if session_id present */}
         {!hasSessionId && !isClosed && !isFull && (
-          <div className="card">
+          <Card>
             <JoinAndPayClient slug={slug} isFull={isFull} isClosed={isClosed} />
-          </div>
+          </Card>
         )}
       </div>
     </main>
