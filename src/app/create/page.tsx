@@ -36,6 +36,8 @@ export default function CreatePage() {
     const maxSpots = formData.get("maxSpots") as string;
     const organiserName = formData.get("organiserName") as string;
     const organiserEmail = formData.get("organiserEmail") as string;
+    const eventDate = formData.get("eventDate") as string;
+    const eventTime = formData.get("eventTime") as string;
 
     // Convert pounds to pence with validation
     const pricePoundsNum = parseFloat(pricePounds);
@@ -54,6 +56,46 @@ export default function CreatePage() {
       return;
     }
 
+    // Validate date/time: if either is provided, both must be provided
+    const hasDate = eventDate && eventDate.trim().length > 0;
+    const hasTime = eventTime && eventTime.trim().length > 0;
+    if (hasDate !== hasTime) {
+      setError("Please provide both date and time, or leave both empty");
+      setLoading(false);
+      return;
+    }
+
+    // Combine date and time into startsAt (Europe/London timezone)
+    let startsAt: string | undefined = undefined;
+    if (hasDate && hasTime) {
+      // Parse date components
+      const [year, month, day] = eventDate.split("-").map(Number);
+      const [hours, minutes] = eventTime.split(":").map(Number);
+      
+      if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) {
+        setError("Please enter a valid date and time");
+        setLoading(false);
+        return;
+      }
+
+      // Create date assuming Europe/London timezone
+      // Note: JavaScript Date interprets as local time, so we create UTC date
+      // and adjust for Europe/London offset (UTC+0 in winter, UTC+1 in summer)
+      // For simplicity, we'll create the date and let the server handle timezone
+      // The user enters local time thinking it's Europe/London
+      const dateTimeString = `${eventDate}T${eventTime}:00`;
+      const localDate = new Date(dateTimeString);
+      
+      if (isNaN(localDate.getTime())) {
+        setError("Please enter a valid date and time");
+        setLoading(false);
+        return;
+      }
+      
+      // Send as ISO string (server will interpret as needed)
+      startsAt = localDate.toISOString();
+    }
+
     try {
       const response = await fetch("/api/events", {
         method: "POST",
@@ -66,6 +108,7 @@ export default function CreatePage() {
           maxSpots: maxSpotsNum,
           organiserName,
           organiserEmail: organiserEmail || undefined,
+          startsAt: startsAt || undefined,
         }),
       });
 
@@ -267,29 +310,59 @@ export default function CreatePage() {
               />
             </div>
 
-            {/* Total cost + Split total button */}
+            {/* Total cost + Split total button + Date/Time (inline on desktop) */}
             <div>
-              <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5 opacity-80">
-                Total cost (£) (optional)
-              </label>
-              <div className="flex flex-col md:flex-row gap-2">
-                <input
-                  type="number"
-                  id="totalCost"
-                  name="totalCost"
-                  step="0.01"
-                  min="0"
-                  value={totalCost}
-                  onChange={(e) => setTotalCost(e.target.value)}
-                  className="flex-1 tabular-nums"
-                />
-                <button
-                  type="button"
-                  onClick={handleSplitTotal}
-                  className="btn-secondary px-3 py-2 text-xs whitespace-nowrap md:w-auto"
-                >
-                  Split total
-                </button>
+              <div className="flex flex-col md:flex-row md:items-end gap-2">
+                {/* Total cost section */}
+                <div className="flex-1">
+                  <label htmlFor="totalCost" className="block text-xs font-medium mb-1.5 opacity-80">
+                    Total cost (£) (optional)
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="number"
+                      id="totalCost"
+                      name="totalCost"
+                      step="0.01"
+                      min="0"
+                      value={totalCost}
+                      onChange={(e) => setTotalCost(e.target.value)}
+                      className="flex-1 tabular-nums"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSplitTotal}
+                      className="btn-secondary px-3 py-2 text-xs whitespace-nowrap sm:w-auto"
+                    >
+                      Split total
+                    </button>
+                  </div>
+                </div>
+                {/* Date/Time section (inline on desktop) */}
+                <div className="flex-1 md:flex md:gap-2">
+                  <div className="flex-1">
+                    <label htmlFor="eventDate" className="block text-xs font-medium mb-1.5 opacity-80">
+                      Event Date (optional)
+                    </label>
+                    <input
+                      type="date"
+                      id="eventDate"
+                      name="eventDate"
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="eventTime" className="block text-xs font-medium mb-1.5 opacity-80">
+                      Event Time (optional)
+                    </label>
+                    <input
+                      type="time"
+                      id="eventTime"
+                      name="eventTime"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

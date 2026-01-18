@@ -20,7 +20,7 @@ function generateToken(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, pricePence, maxSpots, organiserName, organiserEmail } = body;
+    const { title, pricePence, maxSpots, organiserName, organiserEmail, startsAt } = body;
 
     // Validate required fields
     if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -64,6 +64,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate startsAt if provided
+    let startsAtDate: Date | null = null;
+    if (startsAt !== undefined && startsAt !== null) {
+      if (typeof startsAt !== "string" || startsAt.trim().length === 0) {
+        return NextResponse.json(
+          { error: "startsAt must be a valid ISO date string if provided" },
+          { status: 400 }
+        );
+      }
+      startsAtDate = new Date(startsAt);
+      if (isNaN(startsAtDate.getTime())) {
+        return NextResponse.json(
+          { error: "startsAt must be a valid date" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Generate slug and token
     let slug = generateSlug();
     let token = generateToken();
@@ -104,6 +122,7 @@ export async function POST(request: Request) {
         maxSpots,
         organiserName: organiserName.trim(),
         organiserEmail: organiserEmail?.trim() || null,
+        startsAt: startsAtDate,
         adminTokens: {
           create: {
             token,

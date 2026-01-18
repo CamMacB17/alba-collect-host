@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
             maxSpots: true,
             closedAt: true,
             organiserEmail: true,
+            startsAt: true,
             adminTokens: {
               select: {
                 token: true,
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
             maxSpots: payment.event.maxSpots,
             closedAt: payment.event.closedAt,
             organiserEmail: payment.event.organiserEmail,
+            startsAt: payment.event.startsAt,
             adminToken: payment.event.adminTokens[0]?.token || null,
           }
         : null,

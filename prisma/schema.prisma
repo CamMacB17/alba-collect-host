@@ -33,6 +33,7 @@ model Event {
   maxSpots       Int
   organiserName  String
   organiserEmail String?
+  startsAt       DateTime?
   status         EventStatus @default(ACTIVE)
   createdAt      DateTime    @default(now())
   closedAt       DateTime?

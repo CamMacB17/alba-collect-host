@@ -14,6 +14,7 @@ type BookingData = {
     maxSpots: number | null;
     closedAt: Date | null;
     organiserEmail: string | null;
+    startsAt: Date | null;
     adminToken: string | null;
   } | null;
   payment: {
@@ -109,6 +110,39 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
     return `mailto:${booking.event.organiserEmail}?subject=${subject}&body=${body}`;
   };
 
+  const getGoogleCalendarUrl = () => {
+    if (!booking?.event?.startsAt || !booking?.event?.title) {
+      return null;
+    }
+
+    const startDate = new Date(booking.event.startsAt);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Default 60 minutes duration
+
+    const formatDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: booking.event.title,
+      dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+    });
+
+    if (booking.event.organiserEmail) {
+      params.append("add", booking.event.organiserEmail);
+    }
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
+  const getICSUrl = () => {
+    if (!booking?.event?.startsAt || !sessionId) {
+      return null;
+    }
+
+    return `/api/calendar/ics?session_id=${encodeURIComponent(sessionId)}`;
+  };
+
   // PAID status
   if (booking.status === "PAID" && booking.payment && booking.event) {
     const amountDisplay = booking.payment.amountPenceCaptured
@@ -182,14 +216,35 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
         <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
-        {contactMailto && (
-          <div className="mt-3 pt-3 border-t border-current/20">
-            <a
-              href={contactMailto}
-              className="text-xs underline opacity-80 hover:opacity-100"
-            >
-              Contact organiser
-            </a>
+        {(contactMailto || getGoogleCalendarUrl() || getICSUrl()) && (
+          <div className="mt-3 pt-3 border-t border-current/20 flex flex-wrap gap-2">
+            {contactMailto && (
+              <a
+                href={contactMailto}
+                className="text-xs underline opacity-80 hover:opacity-100"
+              >
+                Contact organiser
+              </a>
+            )}
+            {getGoogleCalendarUrl() && (
+              <a
+                href={getGoogleCalendarUrl()!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs underline opacity-80 hover:opacity-100"
+              >
+                Add to Google Calendar
+              </a>
+            )}
+            {getICSUrl() && (
+              <a
+                href={getICSUrl()!}
+                download={`${booking.event.title.replace(/[^a-z0-9]/gi, "_")}.ics`}
+                className="text-xs underline opacity-80 hover:opacity-100"
+              >
+                Download calendar file
+              </a>
+            )}
           </div>
         )}
       </Alert>
