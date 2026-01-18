@@ -1,10 +1,21 @@
 import { Resend } from "resend";
 import { logger } from "@/lib/logger";
+import { getOptionalEnv } from "@/lib/env";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
+/**
+ * Centralized email sender configuration
+ * Uses env vars with safe defaults
+ */
+const emailConfig = {
+  fromName: getOptionalEnv("EMAIL_FROM_NAME", "Alba Events"),
+  fromAddress: getOptionalEnv("EMAIL_FROM_ADDRESS", "events@golfalba.co"),
+  replyTo: getOptionalEnv("EMAIL_REPLY_TO", "hello@golfalba.co"),
+};
+
+const fromEmail = `${emailConfig.fromName} <${emailConfig.fromAddress}>`;
 
 /**
  * Send payment confirmation email
@@ -76,12 +87,11 @@ ${sessionId ? `\nView your booking: ${finalEventUrl}` : ''}`;
       text: textBody,
     };
 
-    if (replyTo && replyTo.trim().length > 0) {
-      emailOptions.replyTo = replyTo.trim();
-    }
+    // Use provided replyTo or default from config
+    emailOptions.replyTo = replyTo && replyTo.trim().length > 0 ? replyTo.trim() : emailConfig.replyTo;
 
     await resend.emails.send(emailOptions);
-    logger.info("Payment confirmation email sent", { correlationId, to, recipient: to, eventTitle, replyTo });
+    logger.info("Payment confirmation email sent", { correlationId, to, recipient: to, eventTitle, replyTo: emailOptions.replyTo });
   } catch (error) {
     // Log Resend rejection/suppression with full details
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -171,12 +181,11 @@ View event: ${finalEventUrl}`;
       text: textBody,
     };
 
-    if (replyTo && replyTo.trim().length > 0) {
-      emailOptions.replyTo = replyTo.trim();
-    }
+    // Use provided replyTo or default from config
+    emailOptions.replyTo = replyTo && replyTo.trim().length > 0 ? replyTo.trim() : emailConfig.replyTo;
 
     await resend.emails.send(emailOptions);
-    logger.info("Refund confirmation email sent", { correlationId, to, eventTitle, replyTo });
+    logger.info("Refund confirmation email sent", { correlationId, to, eventTitle, replyTo: emailOptions.replyTo });
   } catch (error) {
     logger.error("Failed to send refund confirmation email", { correlationId, to, error });
     throw error;
@@ -225,8 +234,9 @@ export async function sendEmail(args: {
       to,
       subject,
       text: body,
+      replyTo: emailConfig.replyTo,
     });
-    logger.info("Email sent", { correlationId, to, recipient: to, subject });
+    logger.info("Email sent", { correlationId, to, recipient: to, subject, replyTo: emailConfig.replyTo });
   } catch (error) {
     // Log Resend rejection/suppression with full details
     const errorMessage = error instanceof Error ? error.message : String(error);
