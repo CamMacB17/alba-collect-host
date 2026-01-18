@@ -28,6 +28,16 @@ export async function GET(request: NextRequest) {
             pricePence: true,
             maxSpots: true,
             closedAt: true,
+            organiserEmail: true,
+            adminTokens: {
+              select: {
+                token: true,
+              },
+              take: 1,
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
           },
         },
       },
@@ -52,6 +62,8 @@ export async function GET(request: NextRequest) {
             pricePence: payment.event.pricePence,
             maxSpots: payment.event.maxSpots,
             closedAt: payment.event.closedAt,
+            organiserEmail: payment.event.organiserEmail,
+            adminToken: payment.event.adminTokens[0]?.token || null,
           }
         : null,
       payment: payment

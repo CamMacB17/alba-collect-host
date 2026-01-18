@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Alert from "@/components/ui/Alert";
+import { requestRefund } from "./actions-refund-request";
 
 type BookingData = {
   status: "PAID" | "PLEDGED" | "CANCELLED" | "REFUNDED" | "NOT_FOUND";
@@ -12,6 +13,8 @@ type BookingData = {
     pricePence: number;
     maxSpots: number | null;
     closedAt: Date | null;
+    organiserEmail: string | null;
+    adminToken: string | null;
   } | null;
   payment: {
     id: string;
@@ -32,6 +35,8 @@ type BookingConfirmationProps = {
 export default function BookingConfirmation({ sessionId, onBookingResolved }: BookingConfirmationProps) {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refundRequesting, setRefundRequesting] = useState(false);
+  const [refundRequestResult, setRefundRequestResult] = useState<{ ok: boolean; error?: string } | null>(null);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -66,14 +71,54 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
     return null;
   }
 
+  const handleRequestRefund = async () => {
+    if (!booking?.event || !booking?.payment || !booking.event.organiserEmail || !booking.event.adminToken) {
+      return;
+    }
+
+    setRefundRequesting(true);
+    setRefundRequestResult(null);
+
+    const result = await requestRefund({
+      eventTitle: booking.event.title,
+      attendeeName: booking.payment.name,
+      attendeeEmail: booking.payment.email,
+      paymentId: booking.payment.id,
+      amountPence: booking.payment.amountPenceCaptured || 0,
+      organiserEmail: booking.event.organiserEmail,
+      adminToken: booking.event.adminToken,
+    });
+
+    setRefundRequestResult(result);
+    setRefundRequesting(false);
+  };
+
+  const getContactOrganiserMailto = () => {
+    if (!booking?.event?.organiserEmail || !booking?.event?.title || !booking?.payment) {
+      return null;
+    }
+
+    const subject = encodeURIComponent(`Question about ${booking.event.title}`);
+    const body = encodeURIComponent(
+      `Hi,\n\nI have a question about ${booking.event.title}.\n\n` +
+        `My email: ${booking.payment.email}\n` +
+        `Payment reference: ${booking.payment.id}\n\n` +
+        `Thanks!`
+    );
+
+    return `mailto:${booking.event.organiserEmail}?subject=${subject}&body=${body}`;
+  };
+
   // PAID status
-  if (booking.status === "PAID" && booking.payment) {
+  if (booking.status === "PAID" && booking.payment && booking.event) {
     const amountDisplay = booking.payment.amountPenceCaptured
       ? `£${(booking.payment.amountPenceCaptured / 100).toFixed(2)}`
       : null;
     const paidDate = booking.payment.paidAt
       ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(booking.payment.paidAt))
       : null;
+
+    const contactMailto = getContactOrganiserMailto();
 
     return (
       <Alert variant="success" title="You&apos;re in.">
@@ -90,12 +135,40 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
         <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
+        <div className="mt-3 pt-3 border-t border-current/20 flex flex-wrap gap-2">
+          {contactMailto && (
+            <a
+              href={contactMailto}
+              className="text-xs underline opacity-80 hover:opacity-100"
+            >
+              Contact organiser
+            </a>
+          )}
+          {booking.event.organiserEmail && booking.event.adminToken && (
+            <button
+              onClick={handleRequestRefund}
+              disabled={refundRequesting}
+              className="text-xs underline opacity-80 hover:opacity-100 disabled:opacity-50"
+            >
+              {refundRequesting ? "Sending..." : "Request a refund"}
+            </button>
+          )}
+        </div>
+        {refundRequestResult && (
+          <p className={`text-xs mt-2 ${refundRequestResult.ok ? "opacity-70" : "opacity-90"}`}>
+            {refundRequestResult.ok
+              ? "Refund request sent. The organiser will process it."
+              : refundRequestResult.error || "Failed to send refund request."}
+          </p>
+        )}
       </Alert>
     );
   }
 
   // PLEDGED status
-  if (booking.status === "PLEDGED" && booking.payment) {
+  if (booking.status === "PLEDGED" && booking.payment && booking.event) {
+    const contactMailto = getContactOrganiserMailto();
+
     return (
       <Alert variant="success" title="You&apos;re in.">
         <p className="mb-1 text-xs">
@@ -109,6 +182,16 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
         <p className="text-xs mt-1 opacity-60">
           Stripe will email your receipt.
         </p>
+        {contactMailto && (
+          <div className="mt-3 pt-3 border-t border-current/20">
+            <a
+              href={contactMailto}
+              className="text-xs underline opacity-80 hover:opacity-100"
+            >
+              Contact organiser
+            </a>
+          </div>
+        )}
       </Alert>
     );
   }
