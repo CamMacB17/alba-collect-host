@@ -28,6 +28,19 @@ function truncateSessionId(sessionId: string | null): string {
   return `${sessionId.substring(0, 10)}...${sessionId.substring(sessionId.length - 10)}`;
 }
 
+function isStuckPayment(payment: {
+  status: string;
+  createdAt: Date;
+  stripeCheckoutSessionId: string | null;
+}): boolean {
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+  return (
+    payment.status === "PLEDGED" &&
+    payment.createdAt < fifteenMinutesAgo &&
+    payment.stripeCheckoutSessionId !== null
+  );
+}
+
 export default async function OpsEventPage({
   params,
   searchParams,
@@ -96,9 +109,20 @@ export default async function OpsEventPage({
     .filter((p) => p.status === "PAID")
     .reduce((sum, p) => sum + (p.amountPenceCaptured || 0), 0);
 
+  // Detect stuck payments
+  const stuckPayments = event.payments.filter(isStuckPayment);
+  const stuckCount = stuckPayments.length;
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
+        {stuckCount > 0 && (
+          <div className="mb-4 p-3 border border-current/30 rounded" style={{ background: "rgba(251, 185, 36, 0.1)" }}>
+            <p className="text-xs">
+              ⚠️ {stuckCount} stuck payment{stuckCount !== 1 ? "s" : ""} (PLEDGED &gt; 15m). Check Stripe sessions and user support.
+            </p>
+          </div>
+        )}
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-2">{event.title}</h1>
           <div className="text-xs opacity-70 space-y-1">
@@ -125,27 +149,40 @@ export default async function OpsEventPage({
                 <th className="text-left p-2 text-xs font-medium opacity-80">Amount</th>
                 <th className="text-left p-2 text-xs font-medium opacity-80">CreatedAt</th>
                 <th className="text-left p-2 text-xs font-medium opacity-80">Session ID</th>
+                <th className="text-left p-2 text-xs font-medium opacity-80">Stuck</th>
                 <th className="text-left p-2 text-xs font-medium opacity-80">Action</th>
               </tr>
             </thead>
             <tbody>
-              {event.payments.map((payment) => (
-                <tr key={payment.id} className="border-b border-current/10">
-                  <td className="p-2 text-xs">{payment.name}</td>
-                  <td className="p-2 text-xs">{payment.email}</td>
-                  <td className="p-2 text-xs">{payment.status}</td>
-                  <td className="p-2 text-xs">{formatCurrency(payment.amountPenceCaptured)}</td>
-                  <td className="p-2 text-xs">{formatDate(payment.createdAt)}</td>
-                  <td className="p-2 text-xs font-mono">{truncateSessionId(payment.stripeCheckoutSessionId)}</td>
-                  <td className="p-2">
-                    {payment.status === "PAID" ? (
-                      <RefundButton paymentId={payment.id} key={key!} />
-                    ) : (
-                      <span className="text-xs opacity-50">-</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {event.payments.map((payment) => {
+                const stuck = isStuckPayment(payment);
+                return (
+                  <tr key={payment.id} className="border-b border-current/10">
+                    <td className="p-2 text-xs">{payment.name}</td>
+                    <td className="p-2 text-xs">{payment.email}</td>
+                    <td className="p-2 text-xs">{payment.status}</td>
+                    <td className="p-2 text-xs">{formatCurrency(payment.amountPenceCaptured)}</td>
+                    <td className="p-2 text-xs">{formatDate(payment.createdAt)}</td>
+                    <td className="p-2 text-xs font-mono">{truncateSessionId(payment.stripeCheckoutSessionId)}</td>
+                    <td className="p-2 text-xs">
+                      {stuck ? (
+                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: "rgba(251, 185, 36, 0.2)", color: "var(--alba-yellow)" }}>
+                          Stuck
+                        </span>
+                      ) : (
+                        <span className="text-xs opacity-50">-</span>
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {payment.status === "PAID" ? (
+                        <RefundButton paymentId={payment.id} key={key!} />
+                      ) : (
+                        <span className="text-xs opacity-50">-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
