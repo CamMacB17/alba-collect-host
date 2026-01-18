@@ -187,6 +187,25 @@ export default function BookingConfirmation({ sessionId, onBookingResolved }: Bo
               {refundRequesting ? "Sending..." : "Request a refund"}
             </button>
           )}
+          {getGoogleCalendarUrl() && (
+            <a
+              href={getGoogleCalendarUrl()!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs underline opacity-80 hover:opacity-100"
+            >
+              Add to calendar
+            </a>
+          )}
+          {getICSUrl() && (
+            <a
+              href={getICSUrl()!}
+              download={`${booking.event.title.replace(/[^a-z0-9]/gi, "_")}.ics`}
+              className="text-xs underline opacity-80 hover:opacity-100"
+            >
+              Download ICS
+            </a>
+          )}
         </div>
         {refundRequestResult && (
           <p className={`text-xs mt-2 ${refundRequestResult.ok ? "opacity-70" : "opacity-90"}`}>

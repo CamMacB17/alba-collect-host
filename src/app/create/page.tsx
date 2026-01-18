@@ -344,23 +344,45 @@ export default function CreatePage() {
                     <label htmlFor="eventDate" className="block text-xs font-medium mb-1.5 opacity-80">
                       Event Date (optional)
                     </label>
-                    <input
-                      type="date"
-                      id="eventDate"
-                      name="eventDate"
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="eventDate"
+                        name="eventDate"
+                        className="w-full"
+                      />
+                      <svg
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-60 pointer-events-none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <label htmlFor="eventTime" className="block text-xs font-medium mb-1.5 opacity-80">
                       Event Time (optional)
                     </label>
-                    <input
-                      type="time"
-                      id="eventTime"
-                      name="eventTime"
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <input
+                        type="time"
+                        id="eventTime"
+                        name="eventTime"
+                        className="w-full"
+                      />
+                      <svg
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-60 pointer-events-none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
