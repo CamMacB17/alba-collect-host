@@ -48,6 +48,50 @@ export default async function OpsPage({
     notFound();
   }
 
+  // Calculate date 7 days ago
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Fetch summary stats
+  const [eventsLast7Days, paymentsLast7Days, refundsLast7Days] = await Promise.all([
+    // Events last 7 days (count)
+    prisma.event.count({
+      where: {
+        createdAt: {
+          gte: sevenDaysAgo,
+        },
+      },
+    }),
+    // Payments last 7 days (PAID only, for total collected)
+    prisma.payment.findMany({
+      where: {
+        status: "PAID",
+        paidAt: {
+          gte: sevenDaysAgo,
+          not: null,
+        },
+      },
+      select: {
+        amountPenceCaptured: true,
+      },
+    }),
+    // Refunds last 7 days (count where refundedAt not null)
+    prisma.payment.count({
+      where: {
+        refundedAt: {
+          gte: sevenDaysAgo,
+          not: null,
+        },
+      },
+    }),
+  ]);
+
+  // Calculate total collected last 7 days
+  const totalCollectedLast7Days = paymentsLast7Days.reduce(
+    (sum, p) => sum + (p.amountPenceCaptured || 0),
+    0
+  );
+
   // Fetch last 50 events ordered by createdAt desc
   const events = await prisma.event.findMany({
     take: 50,
@@ -93,6 +137,22 @@ export default async function OpsPage({
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-xl font-semibold mb-6">Ops</h1>
+
+        {/* Summary stats */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-3 border border-current/20 rounded">
+            <p className="text-xs opacity-70 mb-1">Events last 7 days</p>
+            <p className="text-lg font-semibold">{eventsLast7Days}</p>
+          </div>
+          <div className="p-3 border border-current/20 rounded">
+            <p className="text-xs opacity-70 mb-1">Total collected last 7 days</p>
+            <p className="text-lg font-semibold">{formatCurrency(totalCollectedLast7Days)}</p>
+          </div>
+          <div className="p-3 border border-current/20 rounded">
+            <p className="text-xs opacity-70 mb-1">Refunds last 7 days</p>
+            <p className="text-lg font-semibold">{refundsLast7Days}</p>
+          </div>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
