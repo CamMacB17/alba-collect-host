@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
+import RefundButton from "./RefundButton";
 
 export const dynamic = "force-dynamic";
 
@@ -138,12 +139,7 @@ export default async function OpsEventPage({
                   <td className="p-2 text-xs font-mono">{truncateSessionId(payment.stripeCheckoutSessionId)}</td>
                   <td className="p-2">
                     {payment.status === "PAID" ? (
-                      <button
-                        disabled
-                        className="text-xs underline opacity-50 cursor-not-allowed"
-                      >
-                        Refund (next)
-                      </button>
+                      <RefundButton paymentId={payment.id} key={key!} />
                     ) : (
                       <span className="text-xs opacity-50">-</span>
                     )}
