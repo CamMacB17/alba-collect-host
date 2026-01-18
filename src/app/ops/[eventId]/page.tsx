@@ -115,7 +115,15 @@ export default async function OpsEventPage({
 
   return (
     <main className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto border border-amber-500/30 rounded-lg p-6">
+        {/* Top row */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-medium uppercase tracking-wider px-2 py-1 rounded" style={{ background: "rgba(251, 185, 36, 0.2)", color: "var(--alba-yellow)" }}>
+            OPS
+          </span>
+          <span className="text-xs opacity-60">Internal</span>
+        </div>
+
         {stuckCount > 0 && (
           <div className="mb-4 p-3 border border-current/30 rounded" style={{ background: "rgba(251, 185, 36, 0.1)" }}>
             <p className="text-xs">
@@ -124,7 +132,8 @@ export default async function OpsEventPage({
           </div>
         )}
         <div className="mb-6">
-          <h1 className="text-xl font-semibold mb-2">{event.title}</h1>
+          <h1 className="text-xl font-semibold mb-1">{event.title}</h1>
+          <p className="text-xs opacity-60 mb-2">Internal operations view. Do not share this link.</p>
           <div className="text-xs opacity-70 space-y-1">
             <p>Organiser: {event.organiserName}</p>
             {event.organiserEmail && <p>Email: {event.organiserEmail}</p>}
