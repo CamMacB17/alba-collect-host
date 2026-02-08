@@ -81,16 +81,21 @@ export default function JoinAndPayClient({ slug, isFull, isClosed }: JoinAndPayC
           />
         </div>
         {!isDisabled && (
-          <Button
-            type="submit"
-            loading={loading}
-            loadingText="Opening secure checkout…"
-            disabled={loading}
-            fullWidth
-            className="py-2.5"
-          >
-            Pay and join
-          </Button>
+          <>
+            <Button
+              type="submit"
+              loading={loading}
+              loadingText="Opening secure checkout…"
+              disabled={loading}
+              fullWidth
+              className="py-2.5"
+            >
+              Pay and join
+            </Button>
+            <p className="text-xs opacity-60 text-center mt-2">
+              Payments are processed securely via Stripe. Refunds are handled by the organiser if needed.
+            </p>
+          </>
         )}
         {isDisabled && (
           <Alert variant="error">
