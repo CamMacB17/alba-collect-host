@@ -5,7 +5,7 @@ import { cleanupPledges } from "@/lib/cleanupPledges";
 import { getStripe } from "@/lib/stripe";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logAdminAction } from "@/lib/adminActionLog";
-import { sendRefundConfirmationEmail } from "@/lib/email";
+import { sendRefundConfirmationEmail, sendPayoutReadyEmail } from "@/lib/email";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { assertRateLimitOrThrow } from "@/lib/rateLimit";
 import { headers } from "next/headers";
@@ -479,6 +479,46 @@ export async function closeEvent(eventId: string, adminToken: string): Promise<v
       timestamp: new Date().toISOString(),
     },
   });
+
+  // Send payout ready email if organiser email exists
+  if (event.organiserEmail && event.organiserEmail.trim().length > 0) {
+    try {
+      // Calculate total collected (PAID payments only)
+      const paidPayments = await prisma.payment.findMany({
+        where: {
+          eventId: event.id,
+          status: "PAID",
+        },
+        select: {
+          amountPenceCaptured: true,
+        },
+      });
+
+      const totalCollectedPence = paidPayments.reduce(
+        (sum, p) => sum + (p.amountPenceCaptured || 0),
+        0
+      );
+
+      // Only send email if there are paid payments
+      if (totalCollectedPence > 0) {
+        await sendPayoutReadyEmail({
+          to: event.organiserEmail,
+          organiserName: event.organiserName,
+          eventTitle: event.title,
+          totalCollectedPence,
+          correlationId,
+        });
+      }
+    } catch (emailErr) {
+      // Log email error but don't fail the close action
+      logger.error("Failed to send payout ready email", {
+        correlationId,
+        eventId: event.id,
+        recipient: event.organiserEmail,
+        error: emailErr,
+      });
+    }
+  }
 }
 
 export async function reopenEvent(eventId: string, adminToken: string): Promise<void> {

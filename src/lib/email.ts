@@ -207,6 +207,77 @@ function escapeHtml(text: string): string {
 }
 
 /**
+ * Send payout ready email to organiser after event completion
+ */
+export async function sendPayoutReadyEmail(args: {
+  to: string;
+  organiserName: string;
+  eventTitle: string;
+  totalCollectedPence: number;
+  correlationId?: string;
+}): Promise<void> {
+  const { to, organiserName, eventTitle, totalCollectedPence, correlationId } = args;
+
+  // Guard missing email address
+  if (!to || to.trim().length === 0) {
+    logger.warn("Missing email address, skipping payout ready email", { correlationId, organiserName, eventTitle });
+    return;
+  }
+
+  if (!resend) {
+    logger.warn("RESEND_API_KEY not set, skipping payout ready email", { correlationId, to });
+    return;
+  }
+
+  const totalCollectedDisplay = `£${(totalCollectedPence / 100).toFixed(2)}`;
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2>Your Alba event payout is ready</h2>
+        <p>Hi ${escapeHtml(organiserName)},</p>
+        <p>Your event <strong>${escapeHtml(eventTitle)}</strong> has completed.</p>
+        <p>Total amount collected: <strong>${escapeHtml(totalCollectedDisplay)}</strong></p>
+        <p>Stripe processing fees have been deducted from this amount.</p>
+        <p>Your payout will be sent shortly.</p>
+        <p>If you need to confirm any details, please reply to this email.</p>
+      </body>
+    </html>
+  `;
+
+  const textBody = `Hi ${organiserName},
+
+Your event ${eventTitle} has completed.
+
+Total amount collected: ${totalCollectedDisplay}
+
+Stripe processing fees have been deducted from this amount.
+
+Your payout will be sent shortly.
+
+If you need to confirm any details, please reply to this email.`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to,
+      subject: "Your Alba event payout is ready",
+      html: htmlBody,
+      text: textBody,
+      replyTo: emailConfig.replyTo,
+    });
+    logger.info("Payout ready email sent", { correlationId, to, eventTitle, totalCollectedPence, replyTo: emailConfig.replyTo });
+  } catch (error) {
+    logger.error("Failed to send payout ready email", { correlationId, to, error });
+    throw error;
+  }
+}
+
+/**
  * Legacy sendEmail function for backward compatibility (organiser notifications)
  * @deprecated Use sendPaymentConfirmationEmail or sendRefundConfirmationEmail instead
  */
