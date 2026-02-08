@@ -415,6 +415,11 @@ export default function CreatePage() {
               />
             </div>
 
+            {/* Payment info note */}
+            <div className="text-xs opacity-70 space-y-1">
+              <p>Payments are collected by Alba via Stripe. Stripe processing fees apply. Organisers are paid out after the event.</p>
+            </div>
+
             {/* Create Event button */}
             <div>
               <button
