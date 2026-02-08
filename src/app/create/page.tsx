@@ -189,6 +189,11 @@ export default function CreatePage() {
                 <p className="text-sm opacity-80">
                   Your event is ready. Share these links with your guests.
                 </p>
+                <div className="mt-4 pt-4 border-t border-current/20">
+                  <p className="text-xs opacity-70">
+                    All guest payments are held securely via Stripe. Payout is processed after the event completes. Refunds (if any) are handled before payout.
+                  </p>
+                </div>
               </div>
             </div>
             <div className="space-y-4">

@@ -283,7 +283,10 @@ export async function POST(request: NextRequest) {
 Joiner: ${payment.name} (${payment.email})
 Amount paid: ${priceDisplay}
 
-${spotsDisplay}`,
+${spotsDisplay}
+
+Payment information:
+All guest payments are held securely via Stripe. Payout is processed after the event completes. Refunds (if any) are handled before payout.`,
                 correlationId,
               });
 
