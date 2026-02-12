@@ -3,6 +3,7 @@ import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getDbHostname, getDeploymentPlatform, getDbConnectionErrorMessage, isRailwayInternalHost } from "@/lib/db-info";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,13 @@ export default async function OpsPage({
   }
 
   try {
+    // Log database connection info for debugging
+    const dbHostname = getDbHostname();
+    const platform = getDeploymentPlatform();
+    console.log("[Ops Dashboard] Database hostname:", dbHostname);
+    console.log("[Ops Dashboard] Deployment platform:", platform);
+    console.log("[Ops Dashboard] Is Railway internal:", isRailwayInternalHost(dbHostname));
+
     // Calculate date 7 days ago
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -202,15 +210,41 @@ export default async function OpsPage({
     );
   } catch (error) {
     console.error("Ops page error:", error);
+    
+    // Get database connection info for better error message
+    const dbHostname = getDbHostname();
+    const platform = getDeploymentPlatform();
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbConnectionError = errorMessage.includes("Can't reach database server") || 
+                                 errorMessage.includes("database server") ||
+                                 errorMessage.includes("P1001");
+    
+    // Generate user-friendly error message if it's a database connection issue
+    const userMessage = isDbConnectionError 
+      ? getDbConnectionErrorMessage(dbHostname, platform)
+      : "An error occurred while loading the ops dashboard.";
+    
     return (
       <main className="min-h-screen p-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Error loading ops dashboard</h1>
-          <p className="mb-4">An error occurred while loading the ops dashboard.</p>
+          <p className="mb-4">{userMessage}</p>
+          {isDbConnectionError && dbHostname && (
+            <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
+              <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHostname}</code></p>
+              <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{platform}</code></p>
+              {isRailwayInternalHost(dbHostname) && platform !== "railway" && (
+                <p className="text-xs mt-2 text-yellow-400">
+                  ⚠️ Railway internal hostnames are only accessible from Railway deployments. 
+                  {platform === "vercel" && " Use Railway's public database URL in Vercel environment variables."}
+                </p>
+              )}
+            </div>
+          )}
           <details className="text-xs opacity-70">
-            <summary className="cursor-pointer mb-2">Error details</summary>
+            <summary className="cursor-pointer mb-2">Technical error details</summary>
             <pre className="bg-black/10 p-2 rounded overflow-auto">
-              {error instanceof Error ? error.message : String(error)}
+              {errorMessage}
             </pre>
           </details>
         </div>
