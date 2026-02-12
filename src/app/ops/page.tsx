@@ -1,4 +1,4 @@
-import { prisma, ensureDbConnection } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
@@ -49,9 +49,6 @@ export default async function OpsPage({
   }
 
   try {
-    // Ensure database connection is ready
-    await ensureDbConnection();
-
     // Calculate date 7 days ago
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
