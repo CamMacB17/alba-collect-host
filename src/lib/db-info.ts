@@ -58,3 +58,13 @@ export function getDbConnectionErrorMessage(hostname: string | null, platform: s
   }
   return `Database unreachable: Cannot connect to database at ${hostname || "unknown hostname"}. Please ensure the database server is running and accessible.`;
 }
+
+/**
+ * Log database hostname (host only, no credentials)
+ */
+export function logDbHost(): void {
+  const hostname = getDbHostname();
+  if (hostname) {
+    console.log(`DB_HOST=${hostname}`);
+  }
+}

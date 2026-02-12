@@ -3,8 +3,7 @@ import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import RefundButton from "./RefundButton";
-import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost } from "@/lib/db-info";
-import { checkDbHealth } from "@/lib/db-health";
+import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost, logDbHost } from "@/lib/db-info";
 
 export const dynamic = "force-dynamic";
 
@@ -73,81 +72,67 @@ export default async function OpsEventPage({
     notFound();
   }
 
-  try {
-    // Check database health first
-    const dbHealthCheck = await checkDbHealth();
-    
-    if (dbHealthCheck.status !== 'ok') {
-      // Database health check failed - show actionable error
-      return (
-        <main className="min-h-screen p-8">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Database Connection Error</h1>
-            <p className="mb-4">{dbHealthCheck.message}</p>
-            {dbHealthCheck.hostname && (
-              <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
-                <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.hostname}</code></p>
-                <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.platform}</code></p>
-                {dbHealthCheck.isRailwayInternal && dbHealthCheck.platform !== "railway" && (
-                  <div className="mt-3 p-2 border border-yellow-500/50 rounded bg-yellow-500/10">
-                    <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Action Required:</p>
-                    <p className="text-xs text-yellow-400">
-                      Railway internal hostnames are only accessible from Railway deployments. 
-                      {dbHealthCheck.platform === "vercel" && " Use Railway's public database URL in Vercel environment variables, or deploy this app on Railway."}
-                      {dbHealthCheck.platform !== "vercel" && dbHealthCheck.platform !== "railway" && ` Deploy this app on Railway or use Railway's public database URL.`}
-                    </p>
-                  </div>
-                )}
-                {dbHealthCheck.platform === "railway" && dbHealthCheck.isRailwayInternal && (
-                  <div className="mt-3 p-2 border border-blue-500/50 rounded bg-blue-500/10">
-                    <p className="text-xs text-blue-400 font-semibold mb-1">ℹ️ Railway Deployment Detected:</p>
-                    <p className="text-xs text-blue-400">
-                      Ensure the PostgreSQL service is running and attached to this Railway service in the same project.
-                      Check Railway dashboard → Services → verify PostgreSQL is running and connected.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+  // Log database hostname (host only, no creds)
+  logDbHost();
+
+  const dbHostname = getDbHostname();
+  const platform = getDeploymentPlatform();
+  const runtime = process.env.VERCEL ? "Vercel" : process.env.RAILWAY_ENVIRONMENT ? "Railway" : "Unknown";
+
+  // Helper to render database unreachable error page
+  const renderDbError = () => (
+    <main className="min-h-screen p-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Database unreachable</h1>
+        <p className="mb-2">Current runtime: <code className="bg-black/20 px-1 rounded">{runtime}</code></p>
+        {platform === "vercel" && isRailwayInternalHost(dbHostname) ? (
+          <p className="mb-4">If you're on Vercel, you cannot use postgres.railway.internal. Deploy this service on Railway or use a public DB URL.</p>
+        ) : (
+          <p className="mb-4">Please ensure the database server is running and accessible.</p>
+        )}
+        {dbHostname && (
+          <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
+            <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHostname}</code></p>
           </div>
-        </main>
-      );
-    }
+        )}
+      </div>
+    </main>
+  );
 
-    // Log database connection info for debugging
-    const dbHostname = getDbHostname();
-    const platform = getDeploymentPlatform();
-    console.log("[Ops Event Page] Database hostname:", dbHostname);
-    console.log("[Ops Event Page] Deployment platform:", platform);
-    console.log("[Ops Event Page] Is Railway internal:", isRailwayInternalHost(dbHostname));
-
+  try {
     // Fetch event with payments
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      select: {
-        id: true,
-        title: true,
-        organiserName: true,
-        organiserEmail: true,
-        pricePence: true,
-        maxSpots: true,
-        closedAt: true,
-        startsAt: true,
-        createdAt: true,
-        payments: {
-          orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            status: true,
-            amountPenceCaptured: true,
-            createdAt: true,
-            stripeCheckoutSessionId: true,
+    let event;
+    try {
+      event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          title: true,
+          organiserName: true,
+          organiserEmail: true,
+          pricePence: true,
+          maxSpots: true,
+          closedAt: true,
+          startsAt: true,
+          createdAt: true,
+          payments: {
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              status: true,
+              amountPenceCaptured: true,
+              createdAt: true,
+              stripeCheckoutSessionId: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Failed to fetch event:", error);
+      return renderDbError();
+    }
 
     if (!event) {
       notFound();
@@ -250,45 +235,6 @@ export default async function OpsEventPage({
     );
   } catch (error) {
     console.error("Ops event page error:", error);
-    
-    // Get database connection info for better error message
-    const dbHostname = getDbHostname();
-    const platform = getDeploymentPlatform();
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbConnectionError = errorMessage.includes("Can't reach database server") || 
-                                 errorMessage.includes("database server") ||
-                                 errorMessage.includes("P1001");
-    
-    // Generate user-friendly error message if it's a database connection issue
-    const userMessage = isDbConnectionError 
-      ? getDbConnectionErrorMessage(dbHostname, platform)
-      : "An error occurred while loading the event details.";
-    
-    return (
-      <main className="min-h-screen p-8">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Error loading event</h1>
-          <p className="mb-4">{userMessage}</p>
-          {isDbConnectionError && dbHostname && (
-            <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
-              <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHostname}</code></p>
-              <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{platform}</code></p>
-              {isRailwayInternalHost(dbHostname) && platform !== "railway" && (
-                <p className="text-xs mt-2 text-yellow-400">
-                  ⚠️ Railway internal hostnames are only accessible from Railway deployments. 
-                  {platform === "vercel" && " Use Railway's public database URL in Vercel environment variables."}
-                </p>
-              )}
-            </div>
-          )}
-          <details className="text-xs opacity-70">
-            <summary className="cursor-pointer mb-2">Technical error details</summary>
-            <pre className="bg-black/10 p-2 rounded overflow-auto">
-              {errorMessage}
-            </pre>
-          </details>
-        </div>
-      </main>
-    );
+    return renderDbError();
   }
 }

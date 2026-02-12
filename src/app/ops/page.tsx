@@ -3,8 +3,7 @@ import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost } from "@/lib/db-info";
-import { checkDbHealth } from "@/lib/db-health";
+import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost, logDbHost } from "@/lib/db-info";
 
 export const dynamic = "force-dynamic";
 
@@ -50,70 +49,58 @@ export default async function OpsPage({
     notFound();
   }
 
-  try {
-    // Check database health first
-    const dbHealthCheck = await checkDbHealth();
-    
-    if (dbHealthCheck.status !== 'ok') {
-      // Database health check failed - show actionable error
-      return (
-        <main className="min-h-screen p-8">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Database Connection Error</h1>
-            <p className="mb-4">{dbHealthCheck.message}</p>
-            {dbHealthCheck.hostname && (
-              <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
-                <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.hostname}</code></p>
-                <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.platform}</code></p>
-                {dbHealthCheck.isRailwayInternal && dbHealthCheck.platform !== "railway" && (
-                  <div className="mt-3 p-2 border border-yellow-500/50 rounded bg-yellow-500/10">
-                    <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Action Required:</p>
-                    <p className="text-xs text-yellow-400">
-                      Railway internal hostnames are only accessible from Railway deployments. 
-                      {dbHealthCheck.platform === "vercel" && " Use Railway's public database URL in Vercel environment variables, or deploy this app on Railway."}
-                      {dbHealthCheck.platform !== "vercel" && dbHealthCheck.platform !== "railway" && ` Deploy this app on Railway or use Railway's public database URL.`}
-                    </p>
-                  </div>
-                )}
-                {dbHealthCheck.platform === "railway" && dbHealthCheck.isRailwayInternal && (
-                  <div className="mt-3 p-2 border border-blue-500/50 rounded bg-blue-500/10">
-                    <p className="text-xs text-blue-400 font-semibold mb-1">ℹ️ Railway Deployment Detected:</p>
-                    <p className="text-xs text-blue-400">
-                      Ensure the PostgreSQL service is running and attached to this Railway service in the same project.
-                      Check Railway dashboard → Services → verify PostgreSQL is running and connected.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+  // Log database hostname (host only, no creds)
+  logDbHost();
+
+  const dbHostname = getDbHostname();
+  const platform = getDeploymentPlatform();
+  const runtime = process.env.VERCEL ? "Vercel" : process.env.RAILWAY_ENVIRONMENT ? "Railway" : "Unknown";
+
+  // Helper to render database unreachable error page
+  const renderDbError = () => (
+    <main className="min-h-screen p-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Database unreachable</h1>
+        <p className="mb-2">Current runtime: <code className="bg-black/20 px-1 rounded">{runtime}</code></p>
+        {platform === "vercel" && isRailwayInternalHost(dbHostname) ? (
+          <p className="mb-4">If you're on Vercel, you cannot use postgres.railway.internal. Deploy this service on Railway or use a public DB URL.</p>
+        ) : (
+          <p className="mb-4">Please ensure the database server is running and accessible.</p>
+        )}
+        {dbHostname && (
+          <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
+            <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHostname}</code></p>
           </div>
-        </main>
-      );
-    }
+        )}
+      </div>
+    </main>
+  );
 
-    // Log database connection info for debugging
-    const dbHostname = getDbHostname();
-    const platform = getDeploymentPlatform();
-    console.log("[Ops Dashboard] Database hostname:", dbHostname);
-    console.log("[Ops Dashboard] Deployment platform:", platform);
-    console.log("[Ops Dashboard] Is Railway internal:", isRailwayInternalHost(dbHostname));
-
+  try {
     // Calculate date 7 days ago
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Fetch summary stats
-    const [eventsLast7Days, paymentsLast7Days, refundsLast7Days] = await Promise.all([
-      // Events last 7 days (count)
-      prisma.event.count({
+    // Fetch summary stats with individual error handling
+    let eventsLast7Days: number;
+    let paymentsLast7Days: Array<{ amountPenceCaptured: number | null }>;
+    let refundsLast7Days: number;
+
+    try {
+      eventsLast7Days = await prisma.event.count({
         where: {
           createdAt: {
             gte: sevenDaysAgo,
           },
         },
-      }),
-      // Payments last 7 days (PAID only, for total collected)
-      prisma.payment.findMany({
+      });
+    } catch (error) {
+      console.error("Failed to fetch events count:", error);
+      return renderDbError();
+    }
+
+    try {
+      paymentsLast7Days = await prisma.payment.findMany({
         where: {
           status: "PAID",
           paidAt: {
@@ -124,17 +111,25 @@ export default async function OpsPage({
         select: {
           amountPenceCaptured: true,
         },
-      }),
-      // Refunds last 7 days (count where refundedAt not null)
-      prisma.payment.count({
+      });
+    } catch (error) {
+      console.error("Failed to fetch payments:", error);
+      return renderDbError();
+    }
+
+    try {
+      refundsLast7Days = await prisma.payment.count({
         where: {
           refundedAt: {
             gte: sevenDaysAgo,
             not: null,
           },
         },
-      }),
-    ]);
+      });
+    } catch (error) {
+      console.error("Failed to fetch refunds count:", error);
+      return renderDbError();
+    }
 
     // Calculate total collected last 7 days
     const totalCollectedLast7Days = paymentsLast7Days.reduce(
@@ -143,23 +138,29 @@ export default async function OpsPage({
     );
 
     // Fetch last 50 events ordered by createdAt desc
-    const events = await prisma.event.findMany({
-      take: 50,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        closedAt: true,
-        startsAt: true,
-        maxSpots: true,
-        payments: {
-          select: {
-            status: true,
-            amountPenceCaptured: true,
+    let events;
+    try {
+      events = await prisma.event.findMany({
+        take: 50,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          closedAt: true,
+          startsAt: true,
+          maxSpots: true,
+          payments: {
+            select: {
+              status: true,
+              amountPenceCaptured: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+      return renderDbError();
+    }
 
     // Calculate stats for each event
     const eventsWithStats = await Promise.all(
@@ -251,45 +252,6 @@ export default async function OpsPage({
     );
   } catch (error) {
     console.error("Ops page error:", error);
-    
-    // Get database connection info for better error message
-    const dbHostname = getDbHostname();
-    const platform = getDeploymentPlatform();
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbConnectionError = errorMessage.includes("Can't reach database server") || 
-                                 errorMessage.includes("database server") ||
-                                 errorMessage.includes("P1001");
-    
-    // Generate user-friendly error message if it's a database connection issue
-    const userMessage = isDbConnectionError 
-      ? getDbConnectionErrorMessage(dbHostname, platform)
-      : "An error occurred while loading the ops dashboard.";
-    
-    return (
-      <main className="min-h-screen p-8">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Error loading ops dashboard</h1>
-          <p className="mb-4">{userMessage}</p>
-          {isDbConnectionError && dbHostname && (
-            <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
-              <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHostname}</code></p>
-              <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{platform}</code></p>
-              {isRailwayInternalHost(dbHostname) && platform !== "railway" && (
-                <p className="text-xs mt-2 text-yellow-400">
-                  ⚠️ Railway internal hostnames are only accessible from Railway deployments. 
-                  {platform === "vercel" && " Use Railway's public database URL in Vercel environment variables."}
-                </p>
-              )}
-            </div>
-          )}
-          <details className="text-xs opacity-70">
-            <summary className="cursor-pointer mb-2">Technical error details</summary>
-            <pre className="bg-black/10 p-2 rounded overflow-auto">
-              {errorMessage}
-            </pre>
-          </details>
-        </div>
-      </main>
-    );
+    return renderDbError();
   }
 }
