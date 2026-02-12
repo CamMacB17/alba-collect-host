@@ -71,49 +71,50 @@ export default async function OpsEventPage({
     notFound();
   }
 
-  // Fetch event with payments
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: {
-      id: true,
-      title: true,
-      organiserName: true,
-      organiserEmail: true,
-      pricePence: true,
-      maxSpots: true,
-      closedAt: true,
-      startsAt: true,
-      createdAt: true,
-      payments: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          status: true,
-          amountPenceCaptured: true,
-          createdAt: true,
-          stripeCheckoutSessionId: true,
+  try {
+    // Fetch event with payments
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        title: true,
+        organiserName: true,
+        organiserEmail: true,
+        pricePence: true,
+        maxSpots: true,
+        closedAt: true,
+        startsAt: true,
+        createdAt: true,
+        payments: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true,
+            amountPenceCaptured: true,
+            createdAt: true,
+            stripeCheckoutSessionId: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!event) {
-    notFound();
-  }
+    if (!event) {
+      notFound();
+    }
 
-  // Calculate stats
-  const paidCount = event.payments.filter((p) => p.status === "PAID").length;
-  const totalCollected = event.payments
-    .filter((p) => p.status === "PAID")
-    .reduce((sum, p) => sum + (p.amountPenceCaptured || 0), 0);
+    // Calculate stats
+    const paidCount = event.payments.filter((p) => p.status === "PAID").length;
+    const totalCollected = event.payments
+      .filter((p) => p.status === "PAID")
+      .reduce((sum, p) => sum + (p.amountPenceCaptured || 0), 0);
 
-  // Detect stuck payments
-  const stuckPayments = event.payments.filter(isStuckPayment);
-  const stuckCount = stuckPayments.length;
+    // Detect stuck payments
+    const stuckPayments = event.payments.filter(isStuckPayment);
+    const stuckCount = stuckPayments.length;
 
-  return (
+    return (
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto border border-amber-500/30 rounded-lg p-6">
         {/* Top row */}
@@ -197,5 +198,22 @@ export default async function OpsEventPage({
         </div>
       </div>
     </main>
-  );
+    );
+  } catch (error) {
+    console.error("Ops event page error:", error);
+    return (
+      <main className="min-h-screen p-8">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Error loading event</h1>
+          <p className="mb-4">An error occurred while loading the event details.</p>
+          <details className="text-xs opacity-70">
+            <summary className="cursor-pointer mb-2">Error details</summary>
+            <pre className="bg-black/10 p-2 rounded overflow-auto">
+              {error instanceof Error ? error.message : String(error)}
+            </pre>
+          </details>
+        </div>
+      </main>
+    );
+  }
 }
