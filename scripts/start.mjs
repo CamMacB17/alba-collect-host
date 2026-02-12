@@ -10,6 +10,19 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 async function start() {
+  // Log database hostname (redacted credentials)
+  try {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) {
+      const hostname = new URL(dbUrl).hostname;
+      console.log(`DB host: ${hostname}`);
+    } else {
+      console.log('DB host: MISSING');
+    }
+  } catch (error) {
+    console.log('DB host: MISSING');
+  }
+
   console.log('Attempting to run database migrations...');
   
   try {
