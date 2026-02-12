@@ -3,7 +3,8 @@ import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getDbHostname, getDeploymentPlatform, getDbConnectionErrorMessage, isRailwayInternalHost } from "@/lib/db-info";
+import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost } from "@/lib/db-info";
+import { checkDbHealth } from "@/lib/db-health";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,46 @@ export default async function OpsPage({
   }
 
   try {
+    // Check database health first
+    const dbHealthCheck = await checkDbHealth();
+    
+    if (dbHealthCheck.status !== 'ok') {
+      // Database health check failed - show actionable error
+      return (
+        <main className="min-h-screen p-8">
+          <div className="max-w-5xl mx-auto">
+            <h1 className="text-xl font-semibold mb-4" style={{ color: "var(--alba-red)" }}>Database Connection Error</h1>
+            <p className="mb-4">{dbHealthCheck.message}</p>
+            {dbHealthCheck.hostname && (
+              <div className="mb-4 p-3 border border-current/30 rounded bg-black/10">
+                <p className="text-xs mb-1">Database hostname: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.hostname}</code></p>
+                <p className="text-xs mb-1">Deployment platform: <code className="bg-black/20 px-1 rounded">{dbHealthCheck.platform}</code></p>
+                {dbHealthCheck.isRailwayInternal && dbHealthCheck.platform !== "railway" && (
+                  <div className="mt-3 p-2 border border-yellow-500/50 rounded bg-yellow-500/10">
+                    <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Action Required:</p>
+                    <p className="text-xs text-yellow-400">
+                      Railway internal hostnames are only accessible from Railway deployments. 
+                      {dbHealthCheck.platform === "vercel" && " Use Railway's public database URL in Vercel environment variables, or deploy this app on Railway."}
+                      {dbHealthCheck.platform !== "vercel" && dbHealthCheck.platform !== "railway" && ` Deploy this app on Railway or use Railway's public database URL.`}
+                    </p>
+                  </div>
+                )}
+                {dbHealthCheck.platform === "railway" && dbHealthCheck.isRailwayInternal && (
+                  <div className="mt-3 p-2 border border-blue-500/50 rounded bg-blue-500/10">
+                    <p className="text-xs text-blue-400 font-semibold mb-1">ℹ️ Railway Deployment Detected:</p>
+                    <p className="text-xs text-blue-400">
+                      Ensure the PostgreSQL service is running and attached to this Railway service in the same project.
+                      Check Railway dashboard → Services → verify PostgreSQL is running and connected.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      );
+    }
+
     // Log database connection info for debugging
     const dbHostname = getDbHostname();
     const platform = getDeploymentPlatform();
