@@ -7,12 +7,17 @@ export async function cleanupPledges(): Promise<number> {
   const cutoff = new Date(Date.now() - 30 * 60 * 1000);
 
   // Find PLEDGED payments older than cutoff
+  // Only select fields we need to avoid any relation or field access issues
   const oldPledges = await prisma.payment.findMany({
     where: {
       status: "PLEDGED",
       createdAt: {
         lt: cutoff,
       },
+    },
+    select: {
+      id: true,
+      status: true,
     },
   });
 

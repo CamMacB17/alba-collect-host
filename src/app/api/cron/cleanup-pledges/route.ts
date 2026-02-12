@@ -12,9 +12,22 @@ async function handleCleanup(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const cleaned = await cleanupPledges();
-
-  return NextResponse.json({ cleaned });
+  try {
+    const cleaned = await cleanupPledges();
+    return NextResponse.json({ cleaned });
+  } catch (error) {
+    console.error("Cleanup pledges error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    return NextResponse.json(
+      { 
+        error: "Failed to cleanup pledges", 
+        message: errorMessage,
+        stack: process.env.NODE_ENV === "development" ? errorStack : undefined
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(req: NextRequest) {
