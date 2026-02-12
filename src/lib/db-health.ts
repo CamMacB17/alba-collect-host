@@ -1,55 +1,34 @@
 import { prisma } from "@/lib/prisma";
-import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost } from "@/lib/db-info";
 
 /**
- * Check database health (server-side)
- * Returns health status without needing HTTP request
+ * Check database connectivity with timeout
+ * Returns simple { ok, message } format
  */
-export async function checkDbHealth(): Promise<{
-  status: "ok" | "error";
-  message: string;
-  hostname: string | null;
-  platform: string;
-  isRailwayInternal: boolean;
-  error?: string;
-}> {
-  const dbHostname = getDbHostname();
-  const platform = getDeploymentPlatform();
-  const isRailwayInternal = isRailwayInternalHost(dbHostname);
-
+export async function checkDbHealth(): Promise<{ ok: boolean; message?: string }> {
   try {
-    // Test database connection with a simple query
-    await prisma.$queryRaw`SELECT 1`;
-    
-    return {
-      status: "ok",
-      message: "Database connection successful",
-      hostname: dbHostname,
-      platform,
-      isRailwayInternal,
-    };
+    // Create a promise that rejects after 2.5 seconds
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("Database connection timeout")), 2500);
+    });
+
+    // Race the query against the timeout
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      timeoutPromise,
+    ]);
+
+    return { ok: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const isConnectionError = errorMessage.includes("Can't reach database server") || 
-                              errorMessage.includes("database server") ||
-                              errorMessage.includes("P1001");
+    const isUnreachable = 
+      errorMessage.includes("Can't reach database server") ||
+      errorMessage.includes("ECONNREFUSED") ||
+      errorMessage.includes("P1001") ||
+      errorMessage.includes("connection timeout");
 
-    let friendlyMessage = "Database connection failed";
-    if (isConnectionError) {
-      if (isRailwayInternal && platform !== "railway") {
-        friendlyMessage = `Database unreachable: DATABASE_URL points to Railway's internal hostname (${dbHostname}), which is only accessible from within Railway's network. This deployment (${platform}) cannot access Railway internal hostnames. Please deploy on Railway or use Railway's public database URL.`;
-      } else {
-        friendlyMessage = `Database unreachable: Cannot connect to database at ${dbHostname || "unknown hostname"}. Please ensure the database server is running and accessible.`;
-      }
+    if (isUnreachable) {
+      return { ok: false, message: "Database unreachable" };
     }
-
-    return {
-      status: "error",
-      message: friendlyMessage,
-      hostname: dbHostname,
-      platform,
-      isRailwayInternal,
-      error: errorMessage,
-    };
+    return { ok: false, message: `Database error: ${errorMessage}` };
   }
 }

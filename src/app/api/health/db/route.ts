@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
-import { checkDbHealth } from "@/lib/db-health";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
  * Database health check endpoint
- * Returns 200 if database is reachable, 500 if not
+ * Returns 200 {ok:true} if connected, 503 {ok:false, error:"DB_UNREACHABLE"} if not
  */
 export async function GET() {
-  const health = await checkDbHealth();
-  
-  return NextResponse.json(
-    health,
-    { status: health.status === "ok" ? 200 : 500 }
-  );
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: "DB_UNREACHABLE" },
+      { status: 503 }
+    );
+  }
 }

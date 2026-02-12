@@ -4,6 +4,7 @@ import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import RefundButton from "./RefundButton";
 import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost, logDbHost } from "@/lib/db-info";
+import { checkDbHealth } from "@/lib/db-health";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,19 @@ export default async function OpsEventPage({
   );
 
   try {
+    // Check database health first - if unreachable, stop immediately
+    const dbHealth = await checkDbHealth();
+    if (!dbHealth.ok) {
+      const errorMsg = dbHealth.message || "";
+      const isUnreachable = errorMsg.includes("Database unreachable") || 
+                           errorMsg.includes("Can't reach database server") ||
+                           errorMsg.includes("ECONNREFUSED");
+      
+      if (isUnreachable) {
+        return renderDbError();
+      }
+    }
+
     // Fetch event with payments
     let event;
     try {
@@ -130,6 +144,10 @@ export default async function OpsEventPage({
         },
       });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("Can't reach database server") || errorMsg.includes("ECONNREFUSED")) {
+        return renderDbError();
+      }
       console.error("Failed to fetch event:", error);
       return renderDbError();
     }

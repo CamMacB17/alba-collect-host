@@ -16,14 +16,24 @@ async function handleCleanup(req: NextRequest): Promise<NextResponse> {
     const cleaned = await cleanupPledges();
     return NextResponse.json({ cleaned });
   } catch (error) {
-    console.error("Cleanup pledges error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
+    const isUnreachable = errorMessage.includes("DATABASE_UNREACHABLE") ||
+                         errorMessage.includes("Database unreachable") ||
+                         errorMessage.includes("Can't reach database server") ||
+                         errorMessage.includes("ECONNREFUSED");
+    
+    if (isUnreachable) {
+      // Log single-line error and return 200 to avoid spam retries
+      console.error("Cleanup skipped: database unreachable");
+      return NextResponse.json({ cleaned: 0, skipped: true, reason: "database_unreachable" }, { status: 200 });
+    }
+    
+    // Other errors - return 500 to trigger alerts
+    console.error("Cleanup pledges error:", error);
     return NextResponse.json(
       { 
         error: "Failed to cleanup pledges", 
         message: errorMessage,
-        stack: process.env.NODE_ENV === "development" ? errorStack : undefined
       },
       { status: 500 }
     );

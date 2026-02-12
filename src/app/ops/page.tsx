@@ -4,6 +4,7 @@ import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDbHostname, getDeploymentPlatform, isRailwayInternalHost, logDbHost } from "@/lib/db-info";
+import { checkDbHealth } from "@/lib/db-health";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,19 @@ export default async function OpsPage({
   );
 
   try {
+    // Check database health first - if unreachable, stop immediately
+    const dbHealth = await checkDbHealth();
+    if (!dbHealth.ok) {
+      const errorMsg = dbHealth.message || "";
+      const isUnreachable = errorMsg.includes("Database unreachable") || 
+                           errorMsg.includes("Can't reach database server") ||
+                           errorMsg.includes("ECONNREFUSED");
+      
+      if (isUnreachable) {
+        return renderDbError();
+      }
+    }
+
     // Calculate date 7 days ago
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -95,6 +109,10 @@ export default async function OpsPage({
         },
       });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("Can't reach database server") || errorMsg.includes("ECONNREFUSED")) {
+        return renderDbError();
+      }
       console.error("Failed to fetch events count:", error);
       return renderDbError();
     }
@@ -113,6 +131,10 @@ export default async function OpsPage({
         },
       });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("Can't reach database server") || errorMsg.includes("ECONNREFUSED")) {
+        return renderDbError();
+      }
       console.error("Failed to fetch payments:", error);
       return renderDbError();
     }
@@ -127,6 +149,10 @@ export default async function OpsPage({
         },
       });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("Can't reach database server") || errorMsg.includes("ECONNREFUSED")) {
+        return renderDbError();
+      }
       console.error("Failed to fetch refunds count:", error);
       return renderDbError();
     }
@@ -158,6 +184,10 @@ export default async function OpsPage({
         },
       });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("Can't reach database server") || errorMsg.includes("ECONNREFUSED")) {
+        return renderDbError();
+      }
       console.error("Failed to fetch events:", error);
       return renderDbError();
     }

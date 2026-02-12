@@ -1,9 +1,28 @@
 import { prisma } from "@/lib/prisma";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logger, generateCorrelationId } from "@/lib/logger";
+import { checkDbHealth } from "@/lib/db-health";
 
 export async function cleanupPledges(): Promise<number> {
   const correlationId = generateCorrelationId();
+
+  // Check database health before proceeding
+  const dbHealth = await checkDbHealth();
+  if (!dbHealth.ok) {
+    const errorMsg = dbHealth.message || "";
+    const isUnreachable = errorMsg.includes("Database unreachable") || 
+                         errorMsg.includes("Can't reach database server") ||
+                         errorMsg.includes("ECONNREFUSED");
+    
+    if (isUnreachable) {
+      logger.error("Cleanup skipped: database unreachable", { correlationId });
+      throw new Error("DATABASE_UNREACHABLE");
+    }
+    // Other errors - still throw but with original message
+    logger.error("Cleanup skipped: database health check failed", { correlationId, error: errorMsg });
+    throw new Error(`DATABASE_ERROR: ${errorMsg}`);
+  }
+
   const cutoff = new Date(Date.now() - 30 * 60 * 1000);
 
   // Find PLEDGED payments older than cutoff
