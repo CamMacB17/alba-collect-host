@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureDbConnection } from "@/lib/prisma";
 import { getOptionalEnv } from "@/lib/env";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
@@ -72,6 +72,9 @@ export default async function OpsEventPage({
   }
 
   try {
+    // Ensure database connection is ready
+    await ensureDbConnection();
+
     // Fetch event with payments
     const event = await prisma.event.findUnique({
       where: { id: eventId },
