@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { getRequiredEnv } from "@/lib/env";
+import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
 
 export async function payAndJoin(args: { slug: string; name: string; email: string }): Promise<{ checkoutUrl: string } | { error: string }> {
   const { slug, name, email } = args;
@@ -96,12 +97,19 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
     throw err;
   }
 
-  const appUrl = getRequiredEnv("APP_URL").replace(/\/$/, ""); // strip trailing slash
+  const appUrl = getRequiredEnv("APP_URL");
 
   // Create Stripe Checkout Session
   const stripe = getStripe();
   let session;
   try {
+    const successUrl = joinUrl(appUrl, "e", slug) + "?session_id={CHECKOUT_SESSION_ID}";
+    const cancelUrl = joinUrl(appUrl, "e", slug) + "?canceled=1";
+    
+    // Runtime assertion to catch any double slashes
+    assertNoDoubleSlashes(successUrl, "Stripe success_url");
+    assertNoDoubleSlashes(cancelUrl, "Stripe cancel_url");
+    
     session = await stripe.checkout.sessions.create({
       mode: "payment",
       currency: "gbp",
@@ -123,8 +131,8 @@ export async function payAndJoin(args: { slug: string; name: string; email: stri
         slug: event.slug,
       },
       client_reference_id: payment.id,
-      success_url: `${appUrl}/e/${slug}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/e/${slug}?canceled=1`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
   } catch (err) {
     console.error("[payAndJoin] Stripe checkout failed", err);

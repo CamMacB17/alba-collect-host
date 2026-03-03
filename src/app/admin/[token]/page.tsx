@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
 import RemoveButton from "./RemoveButton";
 import MarkPaidButton from "./MarkPaidButton";
 import RefundButton from "./RefundButton";
@@ -31,7 +32,7 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
   let baseUrl: string;
   if (envBase) {
-    baseUrl = envBase.replace(/\/$/, ""); // strip trailing slash
+    baseUrl = envBase;
   } else {
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -173,8 +174,12 @@ export default async function AdminPage({ params }: { params: Promise<{ token: s
   const isClosed = event.closedAt !== null;
 
   // Build absolute URLs
-  const publicUrl = `${baseUrl}/e/${event.slug}`;
-  const adminUrl = `${baseUrl}/admin/${token}`;
+  const publicUrl = joinUrl(baseUrl, "e", event.slug);
+  const adminUrl = joinUrl(baseUrl, "admin", token);
+  
+  // Runtime assertion to catch any double slashes
+  assertNoDoubleSlashes(publicUrl, "admin page publicUrl");
+  assertNoDoubleSlashes(adminUrl, "admin page adminUrl");
 
   // Sort payments: PAID first, then PLEDGED, then CANCELLED (client-side sort)
   const sortedPayments = [...payments].sort((a, b) => {

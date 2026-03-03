@@ -5,6 +5,7 @@ import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
 import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { getRequiredEnv } from "@/lib/env";
+import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 
@@ -206,7 +207,7 @@ export async function POST(request: NextRequest) {
             const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
             let baseUrl: string;
             if (envBase) {
-              baseUrl = envBase.replace(/\/$/, "");
+              baseUrl = envBase;
             } else {
               const proto = h.get("x-forwarded-proto") ?? "http";
               const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -216,7 +217,8 @@ export async function POST(request: NextRequest) {
             // Send payment confirmation email (idempotent: only if receiptEmailSentAt is null)
             // Recipient: attendee (payer) email
             try {
-              const eventUrl = `${baseUrl}/e/${payment.event.slug}`;
+              const eventUrl = joinUrl(baseUrl, "e", payment.event.slug);
+              assertNoDoubleSlashes(eventUrl, "webhook eventUrl");
               
               await sendPaymentConfirmationEmail({
                 to: payment.email,

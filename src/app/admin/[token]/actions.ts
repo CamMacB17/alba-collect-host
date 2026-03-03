@@ -8,6 +8,7 @@ import { logAdminAction } from "@/lib/adminActionLog";
 import { sendRefundConfirmationEmail, sendPayoutReadyEmail } from "@/lib/email";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { assertRateLimitOrThrow } from "@/lib/rateLimit";
+import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
 import { headers } from "next/headers";
 import { randomBytes } from "crypto";
 
@@ -700,14 +701,15 @@ export async function refundPayment(paymentId: string, adminToken: string): Prom
         const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
         let baseUrl: string;
         if (envBase) {
-          baseUrl = envBase.replace(/\/$/, "");
+          baseUrl = envBase;
         } else {
           const proto = h.get("x-forwarded-proto") ?? "http";
           const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
           baseUrl = `${proto}://${host}`;
         }
 
-        const eventUrl = `${baseUrl}/e/${updatedPayment.event.slug}`;
+        const eventUrl = joinUrl(baseUrl, "e", updatedPayment.event.slug);
+        assertNoDoubleSlashes(eventUrl, "refund email eventUrl");
         // Use refund-updated payment state: amountPenceCaptured (which was set to 0) or fallback to amountPence
         const refundAmount = updatedPayment.amountPenceCaptured || updatedPayment.amountPence;
 
@@ -833,7 +835,7 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
   const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
   let baseUrl: string;
   if (envBase) {
-    baseUrl = envBase.replace(/\/$/, "");
+    baseUrl = envBase;
   } else {
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -925,7 +927,8 @@ export async function refundAllPaidPayments(adminToken: string): Promise<{ attem
           !updatedPayment.refundEmailSentAt
         ) {
           try {
-            const eventUrl = `${baseUrl}/e/${updatedPayment.event.slug}`;
+            const eventUrl = joinUrl(baseUrl, "e", updatedPayment.event.slug);
+            assertNoDoubleSlashes(eventUrl, "refund-all email eventUrl");
             // Use refund-updated payment state: amountPenceCaptured (which was set to 0) or fallback to amountPence
             const refundAmount = updatedPayment.amountPenceCaptured || updatedPayment.amountPence;
 
@@ -1088,7 +1091,7 @@ export async function regenerateAdminToken(adminToken: string): Promise<{ ok: tr
     const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
     let baseUrl: string;
     if (envBase) {
-      baseUrl = envBase.replace(/\/$/, "");
+      baseUrl = envBase;
     } else {
       const proto = h.get("x-forwarded-proto") ?? "http";
       const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -1126,7 +1129,8 @@ export async function regenerateAdminToken(adminToken: string): Promise<{ ok: tr
 
     logger.info("Admin token regenerated", { correlationId, eventId: currentAdminToken.eventId });
 
-    const adminUrl = `${baseUrl}/admin/${newToken}`;
+    const adminUrl = joinUrl(baseUrl, "admin", newToken);
+    assertNoDoubleSlashes(adminUrl, "regenerate admin token adminUrl");
     return { ok: true, adminUrl };
   } catch (err) {
     logger.error("Failed to regenerate admin token", { correlationId, error: err });

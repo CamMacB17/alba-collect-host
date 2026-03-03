@@ -3,6 +3,7 @@
 import { sendEmail } from "@/lib/email";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { getRequiredEnv } from "@/lib/env";
+import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
 
 export async function requestRefund(args: {
   eventTitle: string;
@@ -20,8 +21,9 @@ export async function requestRefund(args: {
     return { ok: false, error: "Organiser email not available" };
   }
 
-  const appUrl = getRequiredEnv("APP_URL").replace(/\/$/, "");
-  const adminUrl = `${appUrl}/admin/${adminToken}`;
+  const appUrl = getRequiredEnv("APP_URL");
+  const adminUrl = joinUrl(appUrl, "admin", adminToken);
+  assertNoDoubleSlashes(adminUrl, "refund request adminUrl");
   const amountDisplay = amountPence === 0 ? "Free" : `£${(amountPence / 100).toFixed(2)}`;
 
   const emailBody = `A refund has been requested for a payment.
