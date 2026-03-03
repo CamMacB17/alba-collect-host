@@ -27,6 +27,14 @@ export async function GET(request: NextRequest) {
   const secret = searchParams.get("secret");
   const expectedSecret = getRequiredEnv("CRON_SECRET");
 
+  // Temporary log: CRON_SECRET comparison details (no actual values)
+  logger.info("CRON_SECRET comparison check", {
+    correlationId,
+    cronSecretPresent: !!expectedSecret,
+    cronSecretLength: expectedSecret?.length || 0,
+    incomingSecretLength: secret?.length || 0,
+  });
+
   if (!secret || secret !== expectedSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
