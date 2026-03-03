@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
 import { reconcilePaymentFromSession } from "@/lib/reconcilePayment";
+import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { getRequiredEnv } from "@/lib/env";
 import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
@@ -224,7 +225,7 @@ All guest payments are held securely via Stripe. Payout is processed after the e
       try {
         // Validate transition: only allow PLEDGED -> CANCELLED
         try {
-          assertValidPaymentTransition(existingPayment.status, "CANCELLED");
+          assertValidPaymentTransition(existingPayment.status, "CANCELLED", "stripe_webhook");
         } catch (err) {
           logger.error("Invalid payment status transition for expired session", {
             correlationId,
