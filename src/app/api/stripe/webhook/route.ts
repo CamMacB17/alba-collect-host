@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendPaymentConfirmationEmail, sendEmail } from "@/lib/email";
-import { assertValidPaymentTransition } from "@/lib/paymentTransitions";
+import { reconcilePaymentFromSession } from "@/lib/reconcilePayment";
 import { logger, generateCorrelationId } from "@/lib/logger";
 import { getRequiredEnv } from "@/lib/env";
 import { joinUrl, assertNoDoubleSlashes } from "@/lib/url";
@@ -39,6 +39,17 @@ export async function POST(request: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
+      // Only process if payment_status is "paid"
+      if (session.payment_status !== "paid") {
+        logger.info("Session payment_status is not 'paid', skipping", {
+          correlationId,
+          stripeEventId: event.id,
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+        });
+        return NextResponse.json({ received: true });
+      }
+
       // Check if this Stripe event has already been processed
       const existingWebhookEvent = await prisma.stripeWebhookEvent.findUnique({
         where: { stripeEventId: event.id },
@@ -61,226 +72,72 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Resolve Payment with fallback chain: metadata.paymentId -> client_reference_id -> stripeCheckoutSessionId
-      let existingPayment = null;
-      let resolutionPath = "";
+      // Use shared reconciliation function
+      const result = await reconcilePaymentFromSession(session, correlationId);
 
-      // Try 1: metadata.paymentId
-      const metadataPaymentId = session.metadata?.paymentId;
-      if (metadataPaymentId) {
-        existingPayment = await prisma.payment.findUnique({
-          where: { id: metadataPaymentId },
-        });
-        if (existingPayment) {
-          resolutionPath = "metadata.paymentId";
-        }
-      }
-
-      // Try 2: client_reference_id
-      if (!existingPayment && session.client_reference_id) {
-        existingPayment = await prisma.payment.findUnique({
-          where: { id: session.client_reference_id },
-        });
-        if (existingPayment) {
-          resolutionPath = "client_reference_id";
-        }
-      }
-
-      // Try 3: stripeCheckoutSessionId (canonical identifier)
-      if (!existingPayment) {
-        existingPayment = await prisma.payment.findFirst({
-          where: {
-            stripeCheckoutSessionId: session.id,
-          },
-        });
-        if (existingPayment) {
-          resolutionPath = "stripeCheckoutSessionId";
-        }
-      }
-
-      if (!existingPayment) {
+      // Handle results
+      if (result.error === "Payment not found") {
         logger.error("Payment resolution failed", {
           correlationId,
           stripeEventId: event.id,
           sessionId: session.id,
-          metadataPaymentId: metadataPaymentId || null,
+          metadataPaymentId: session.metadata?.paymentId || null,
           clientReferenceId: session.client_reference_id || null,
-          resolutionPathUsed: "none",
         });
         return NextResponse.json({ error: "Payment not found" }, { status: 404 });
       }
 
-      const paymentId = existingPayment.id;
+      if (result.wasAlreadyPaid) {
+        // Already handled, return success
+        return NextResponse.json({ received: true });
+      }
 
-      try {
+      if (result.error) {
+        // Transition validation failed or update failed
+        // Return success to prevent Stripe retries, but error is already logged
+        return NextResponse.json({ received: true });
+      }
 
-        // If already PAID, skip update and emails (idempotent)
-        if (existingPayment.status === "PAID") {
-          logger.info("Payment already PAID, skipping update", {
-            correlationId,
-            paymentId,
-            sessionId: session.id,
-          });
-          return NextResponse.json({ received: true });
-        }
-
-        // Validate transition: only allow PLEDGED -> PAID
+      // Success - payment reconciled or updated
+      // Send organiser notification if needed (this is not in reconcilePaymentFromSession)
+      if (result.reconciled || result.emailSent) {
         try {
-          assertValidPaymentTransition(existingPayment.status, "PAID");
-        } catch (err) {
-          logger.error("Invalid payment status transition", {
-            correlationId,
-            stripeEventId: event.id,
-            sessionId: session.id,
-            paymentId,
-            resolutionPathUsed: resolutionPath,
-            from: existingPayment.status,
-            to: "PAID",
-            error: err instanceof Error ? err.message : String(err),
+          const payment = await prisma.payment.findUnique({
+            where: { id: result.paymentId },
+            include: { event: true },
           });
-          // Return success to prevent Stripe retries, but log the error
-          return NextResponse.json({ received: true });
-        }
 
-        // Prepare update data, preserving existing paidAt and amountPenceCaptured if set
-        const updateData: {
-          status: "PAID";
-          paidAt?: Date;
-          stripePaymentIntentId: string | null;
-          amountPenceCaptured?: number | null;
-        } = {
-          status: "PAID",
-          stripePaymentIntentId: session.payment_intent
-            ? (typeof session.payment_intent === "string"
-                ? session.payment_intent
-                : session.payment_intent.id)
-            : null,
-        };
-
-        // Only set paidAt when transitioning PLEDGED -> PAID, and if not already set
-        if (existingPayment.status === "PLEDGED" && !existingPayment.paidAt) {
-          updateData.paidAt = new Date();
-        }
-
-        // Only set amountPenceCaptured if not already set
-        if (existingPayment.amountPenceCaptured === null && session.amount_total) {
-          updateData.amountPenceCaptured = session.amount_total;
-        }
-
-        // Update Payment
-        try {
-          await prisma.payment.update({
-            where: { id: paymentId },
-            data: updateData,
-          });
-        } catch (updateErr) {
-          logger.error("Payment update failed", {
-            correlationId,
-            stripeEventId: event.id,
-            sessionId: session.id,
-            paymentId,
-            resolutionPathUsed: resolutionPath,
-            error: updateErr instanceof Error ? updateErr.message : String(updateErr),
-          });
-          return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
-        }
-
-        logger.info("Payment updated to PAID", { correlationId, paymentId, sessionId: session.id });
-
-        // Fetch payment with event details for email (check receiptEmailSentAt)
-        const payment = await prisma.payment.findUnique({
-          where: { id: paymentId },
-          include: { event: true },
-        });
-
-        if (payment && payment.event && !payment.receiptEmailSentAt) {
-          // Validate payment.email exists and is not empty
-          if (!payment.email || payment.email.trim().length === 0) {
-            logger.error("Payment missing email address - cannot send confirmation", {
-              correlationId,
-              paymentId,
-              paymentName: payment.name,
-            });
-          } else {
-            // Build baseUrl for event link
-            const h = await headers();
-            const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
-            let baseUrl: string;
-            if (envBase) {
-              baseUrl = envBase;
-            } else {
-              const proto = h.get("x-forwarded-proto") ?? "http";
-              const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-              baseUrl = `${proto}://${host}`;
-            }
-
-            // Send payment confirmation email (idempotent: only if receiptEmailSentAt is null)
-            // Recipient: attendee (payer) email
-            try {
-              const eventUrl = joinUrl(baseUrl, "e", payment.event.slug);
-              assertNoDoubleSlashes(eventUrl, "webhook eventUrl");
-              
-              await sendPaymentConfirmationEmail({
-                to: payment.email,
-                name: payment.name,
-                eventTitle: payment.event.title,
-                amountPence: payment.amountPence,
-                eventUrl,
-                sessionId: session.id,
-                correlationId,
-                replyTo: payment.event.organiserEmail && payment.event.organiserEmail.trim().length > 0
-                  ? payment.event.organiserEmail.trim()
-                  : undefined,
-              });
-
-              // Mark email as sent
-              await prisma.payment.update({
-                where: { id: paymentId },
-                data: { receiptEmailSentAt: new Date() },
-              });
-            } catch (emailErr) {
-              // Log email error but don't fail the webhook
-              logger.error("Failed to send payment confirmation email", {
-                correlationId,
-                paymentId,
-                recipient: payment.email,
-                error: emailErr,
-              });
-            }
-          }
-
-          // Send notification email to organiser if email exists and not already sent (idempotent)
-          // Recipient: organiserEmail (not attendee email)
           if (
+            payment &&
+            payment.event &&
             payment.event.organiserEmail &&
             payment.event.organiserEmail.trim().length > 0 &&
             !payment.organiserNotificationSentAt
           ) {
-            try {
-              // Count current spots filled (PAID + PLEDGED)
-              const spotsFilled = await prisma.payment.count({
-                where: {
-                  eventId: payment.event.id,
-                  status: {
-                    in: ["PAID", "PLEDGED"],
-                  },
+            // Count current spots filled (PAID + PLEDGED)
+            const spotsFilled = await prisma.payment.count({
+              where: {
+                eventId: payment.event.id,
+                status: {
+                  in: ["PAID", "PLEDGED"],
                 },
-              });
+              },
+            });
 
-              const spotsDisplay =
-                payment.event.maxSpots === null
-                  ? `${spotsFilled} spots filled (unlimited)`
-                  : `${spotsFilled} of ${payment.event.maxSpots} spots filled`;
+            const spotsDisplay =
+              payment.event.maxSpots === null
+                ? `${spotsFilled} spots filled (unlimited)`
+                : `${spotsFilled} of ${payment.event.maxSpots} spots filled`;
 
-              const priceDisplay =
-                payment.amountPence === null || payment.amountPence === 0
-                  ? "Free"
-                  : `£${(payment.amountPence / 100).toFixed(2)}`;
+            const priceDisplay =
+              payment.amountPence === null || payment.amountPence === 0
+                ? "Free"
+                : `£${(payment.amountPence / 100).toFixed(2)}`;
 
-              await sendEmail({
-                to: payment.event.organiserEmail,
-                subject: `New joiner – ${payment.event.title}`,
-                body: `A new person has joined your event.
+            await sendEmail({
+              to: payment.event.organiserEmail,
+              subject: `New joiner – ${payment.event.title}`,
+              body: `A new person has joined your event.
 
 Joiner: ${payment.name} (${payment.email})
 Amount paid: ${priceDisplay}
@@ -289,36 +146,23 @@ ${spotsDisplay}
 
 Payment information:
 All guest payments are held securely via Stripe. Payout is processed after the event completes. Refunds (if any) are handled before payout.`,
-                correlationId,
-              });
+              correlationId,
+            });
 
-              // Mark organiser notification email as sent (only after successful send)
-              await prisma.payment.update({
-                where: { id: paymentId },
-                data: { organiserNotificationSentAt: new Date() },
-              });
-            } catch (emailErr) {
-              // Log email error but don't fail the webhook
-              // Do NOT set organiserNotificationSentAt if send fails (allows retry)
-              logger.error("Failed to send organiser notification email", {
-                correlationId,
-                paymentId,
-                recipient: payment.event.organiserEmail,
-                error: emailErr,
-              });
-            }
+            // Mark organiser notification email as sent
+            await prisma.payment.update({
+              where: { id: result.paymentId },
+              data: { organiserNotificationSentAt: new Date() },
+            });
           }
+        } catch (emailErr) {
+          // Log email error but don't fail the webhook
+          logger.error("Failed to send organiser notification email", {
+            correlationId,
+            paymentId: result.paymentId,
+            error: emailErr,
+          });
         }
-      } catch (err) {
-        logger.error("Payment update failed (checkout.session.completed)", {
-          correlationId,
-          stripeEventId: event.id,
-          sessionId: session.id,
-          paymentId: existingPayment?.id || "unknown",
-          resolutionPathUsed: resolutionPath || "unknown",
-          error: err instanceof Error ? err.message : String(err),
-        });
-        return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
       }
 
       return NextResponse.json({ received: true });
